@@ -37,7 +37,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             C
           </div>
           <h1 className="text-2xl font-bold">Clea Ops</h1>
-          <p className="text-sm text-muted-foreground">Cross-border payment operations platform</p>
+          <p className="text-sm text-muted-foreground">Internal Operations Portal</p>
+          <p className="text-xs text-muted-foreground">Authorized personnel only</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
