@@ -9,6 +9,7 @@ interface AppShellProps {
   onTabChange: (tab: Tab) => void;
   children: React.ReactNode;
   onLogout: () => void;
+  userRole?: string | null;
 }
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -27,7 +28,7 @@ const tabLabels: Record<Tab, string> = {
   projects: 'Project Management',
 };
 
-export function AppShell({ activeTab, onTabChange, children, onLogout }: AppShellProps) {
+export function AppShell({ activeTab, onTabChange, children, onLogout, userRole }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Top Header */}
@@ -45,8 +46,8 @@ export function AppShell({ activeTab, onTabChange, children, onLogout }: AppShel
           <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
             <LogOut className="h-4 w-4" />
           </Button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-            A
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground" title={userRole ? `Role: ${userRole}` : undefined}>
+            {userRole ? userRole.charAt(0).toUpperCase() : 'U'}
           </div>
         </div>
       </header>
