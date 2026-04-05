@@ -43,16 +43,19 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          department: Database["public"]["Enums"]["app_department"] | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          department?: Database["public"]["Enums"]["app_department"] | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          department?: Database["public"]["Enums"]["app_department"] | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -64,6 +67,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_department: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_department"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -73,6 +80,13 @@ export type Database = {
       }
     }
     Enums: {
+      app_department:
+        | "sales"
+        | "marketing"
+        | "customer_success"
+        | "engineering"
+        | "design"
+        | "operations"
       app_role: "admin" | "manager" | "staff"
     }
     CompositeTypes: {
@@ -201,6 +215,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_department: [
+        "sales",
+        "marketing",
+        "customer_success",
+        "engineering",
+        "design",
+        "operations",
+      ],
       app_role: ["admin", "manager", "staff"],
     },
   },
