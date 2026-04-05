@@ -11,7 +11,7 @@ import { formatCurrency, formatNumber } from '@/lib/helpers';
 import { mockClients } from '@/lib/mock-data';
 import { toast } from 'sonner';
 
-export function ClientsModule() {
+export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [clients, setClients] = useState<Client[]>(mockClients);
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<ClientStage | 'All'>('All');

@@ -6,7 +6,7 @@ import { Department, DEPARTMENTS, DEPT_COLORS, KpiTarget } from '@/lib/types';
 import { formatCurrency, formatNumber, getProgressColor, getProgressTextColor } from '@/lib/helpers';
 import { mockKpis, mockEmployees, companyTarget } from '@/lib/mock-data';
 
-export function KpisModule() {
+export function KpisModule({ canEdit = true }: { canEdit?: boolean }) {
   const [kpis, setKpis] = useState<KpiTarget[]>(mockKpis);
   const [activeDept, setActiveDept] = useState<Department>('Sales');
 

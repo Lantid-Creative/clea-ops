@@ -25,7 +25,7 @@ const columnColors: Record<ProjectBoardColumn, string> = {
   'Done': 'border-t-success',
 };
 
-export function ProjectsModule() {
+export function ProjectsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [tasks, setTasks] = useState<ProjectTask[]>(mockTasks);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addToColumn, setAddToColumn] = useState<ProjectBoardColumn>('To Do');

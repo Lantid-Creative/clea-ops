@@ -11,7 +11,7 @@ import { formatNumber } from '@/lib/helpers';
 import { mockEmployees } from '@/lib/mock-data';
 import { toast } from 'sonner';
 
-export function HrModule() {
+export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState<Department | 'All'>('All');

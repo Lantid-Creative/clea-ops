@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 type ViewMode = 'pipeline' | 'team';
 
-export function SalesModule() {
+export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [showAddForm, setShowAddForm] = useState(false);
