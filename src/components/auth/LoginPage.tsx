@@ -37,7 +37,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             C
           </div>
           <h1 className="text-2xl font-bold">Clea Ops</h1>
-          <p className="text-sm text-muted-foreground">Cross-border payment operations platform</p>
+          <p className="text-sm text-muted-foreground">Internal Operations Portal</p>
+          <p className="text-xs text-muted-foreground">Authorized personnel only</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -45,7 +46,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="admin@cleaops.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" />
+              <Input id="email" type="email" placeholder="you@cleaops.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" />
             </div>
           </div>
           <div className="space-y-2">
@@ -61,7 +62,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          Demo mode: enter any credentials to continue
+          Sign in with your company credentials. Contact IT if you need access.
         </p>
       </div>
     </div>
