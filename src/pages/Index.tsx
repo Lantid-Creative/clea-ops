@@ -1,16 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { AppShell } from '@/components/layout/AppShell';
+import { ClientsModule } from '@/components/clients/ClientsModule';
+import { SalesModule } from '@/components/sales/SalesModule';
+import { KpisModule } from '@/components/kpis/KpisModule';
+import { HrModule } from '@/components/hr/HrModule';
+import { ProjectsModule } from '@/components/projects/ProjectsModule';
+import { LoginPage } from '@/components/auth/LoginPage';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+type Tab = 'clients' | 'sales' | 'kpis' | 'hr' | 'projects';
+
+const Index = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('clients');
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <AppShell activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => setIsLoggedIn(false)}>
+      {activeTab === 'clients' && <ClientsModule />}
+      {activeTab === 'sales' && <SalesModule />}
+      {activeTab === 'kpis' && <KpisModule />}
+      {activeTab === 'hr' && <HrModule />}
+      {activeTab === 'projects' && <ProjectsModule />}
+    </AppShell>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
