@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 13%;
 
-    --primary: 217 91% 60%;
+    --primary: 221 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 215 20% 95%;
@@ -32,7 +32,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 221 100% 50%;
 
     --radius: 0.75rem;
 
@@ -44,7 +44,7 @@
     --info-foreground: 0 0% 100%;
 
     /* Department colors */
-    --dept-sales: 217 91% 60%;
+    --dept-sales: 221 100% 50%;
     --dept-marketing: 271 91% 65%;
     --dept-cs: 142 76% 36%;
     --dept-engineering: 38 92% 50%;
@@ -53,12 +53,12 @@
 
     --sidebar-background: 215 25% 13%;
     --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 221 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 25% 20%;
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 215 25% 20%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 221 100% 50%;
   }
 
   .dark {
@@ -68,7 +68,7 @@
     --card-foreground: 210 20% 98%;
     --popover: 215 25% 13%;
     --popover-foreground: 210 20% 98%;
-    --primary: 217 91% 60%;
+    --primary: 221 100% 50%;
     --primary-foreground: 0 0% 100%;
     --secondary: 215 25% 20%;
     --secondary-foreground: 210 20% 98%;
@@ -80,15 +80,15 @@
     --destructive-foreground: 210 20% 98%;
     --border: 215 25% 20%;
     --input: 215 25% 20%;
-    --ring: 217 91% 60%;
+    --ring: 221 100% 50%;
     --sidebar-background: 215 25% 9%;
     --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 221 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 25% 15%;
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 215 25% 15%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 221 100% 50%;
   }
 }
 
