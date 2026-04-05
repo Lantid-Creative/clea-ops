@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +49,26 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        dept: {
+          sales: "hsl(var(--dept-sales))",
+          marketing: "hsl(var(--dept-marketing))",
+          cs: "hsl(var(--dept-cs))",
+          engineering: "hsl(var(--dept-engineering))",
+          design: "hsl(var(--dept-design))",
+          operations: "hsl(var(--dept-operations))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
