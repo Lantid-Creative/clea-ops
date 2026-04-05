@@ -74,9 +74,11 @@ export function ProjectsModule({ canEdit = true }: { canEdit?: boolean }) {
                 <span className="text-sm font-semibold">{column}</span>
                 <div className="flex items-center gap-1">
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{columnTasks.length}</span>
-                  <button onClick={() => { setAddToColumn(column); setShowAddForm(true); }} className="rounded p-0.5 text-muted-foreground hover:text-foreground">
-                    <Plus className="h-4 w-4" />
-                  </button>
+                  {canEdit && (
+                    <button onClick={() => { setAddToColumn(column); setShowAddForm(true); }} className="rounded p-0.5 text-muted-foreground hover:text-foreground">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex-1 space-y-2">
