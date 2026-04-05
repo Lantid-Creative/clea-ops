@@ -85,10 +85,18 @@ export function KpisModule({ canEdit = true }: { canEdit?: boolean }) {
                   <tr key={kpi.id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-medium">{kpi.metric_name}</td>
                     <td className="px-4 py-3 text-right">
-                      <Input type="number" value={kpi.target_value} onChange={(e) => updateKpi(kpi.id, 'target_value', Number(e.target.value))} className="h-7 w-24 text-right text-sm ml-auto" />
+                      {canEdit ? (
+                        <Input type="number" value={kpi.target_value} onChange={(e) => updateKpi(kpi.id, 'target_value', Number(e.target.value))} className="h-7 w-24 text-right text-sm ml-auto" />
+                      ) : (
+                        <span className="text-sm">{formatNumber(kpi.target_value)}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Input type="number" value={kpi.current_value} onChange={(e) => updateKpi(kpi.id, 'current_value', Number(e.target.value))} className="h-7 w-24 text-right text-sm ml-auto" />
+                      {canEdit ? (
+                        <Input type="number" value={kpi.current_value} onChange={(e) => updateKpi(kpi.id, 'current_value', Number(e.target.value))} className="h-7 w-24 text-right text-sm ml-auto" />
+                      ) : (
+                        <span className="text-sm">{formatNumber(kpi.current_value)}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="h-2 rounded-full bg-border">
