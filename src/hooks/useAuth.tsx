@@ -2,33 +2,49 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'admin' | 'manager' | 'staff';
+export type AppRole = 'admin' | 'manager' | 'staff';
+export type AppDepartment = 'sales' | 'marketing' | 'customer_success' | 'engineering' | 'design' | 'operations';
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: AppRole | null;
+  department: AppDepartment | null;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  canEdit: (tab: string) => boolean;
+  canView: (tab: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Maps departments to the tab(s) they can access
+const DEPARTMENT_TAB_MAP: Record<AppDepartment, string[]> = {
+  sales: ['sales'],
+  marketing: ['kpis'],
+  customer_success: ['clients'],
+  engineering: ['projects', 'kpis'],
+  design: ['projects', 'kpis'],
+  operations: ['clients', 'hr', 'kpis'],
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [department, setDepartment] = useState<AppDepartment | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchRole = async (userId: string) => {
+  const fetchRoleAndDept = async (userId: string) => {
     const { data } = await supabase
       .from('user_roles')
-      .select('role')
+      .select('role, department')
       .eq('user_id', userId)
       .single();
     setRole((data?.role as AppRole) ?? 'staff');
+    setDepartment((data?.department as AppDepartment) ?? null);
   };
 
   useEffect(() => {
@@ -36,9 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(() => fetchRole(session.user.id), 0);
+        setTimeout(() => fetchRoleAndDept(session.user.id), 0);
       } else {
         setRole(null);
+        setDepartment(null);
       }
       setLoading(false);
     });
@@ -47,13 +64,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRole(session.user.id);
+        fetchRoleAndDept(session.user.id);
       }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const canView = (tab: string): boolean => {
+    if (!role) return false;
+    if (role === 'admin') return true;
+    if (role === 'manager') return true; // managers see all tabs (read-only on other depts)
+    // Staff: only their department's tabs
+    if (!department) return false;
+    return DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+  };
+
+  const canEdit = (tab: string): boolean => {
+    if (!role) return false;
+    if (role === 'admin') return true;
+    if (role === 'manager') {
+      // Managers can edit only their own department's tab
+      if (!department) return false;
+      return DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+    }
+    // Staff: read-only
+    return false;
+  };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     if (!email.endsWith('@tryclea.com')) {
@@ -80,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, role, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, role, department, loading, signUp, signIn, signOut, canEdit, canView }}>
       {children}
     </AuthContext.Provider>
   );
