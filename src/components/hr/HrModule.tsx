@@ -11,7 +11,7 @@ import { formatNumber } from '@/lib/helpers';
 import { mockEmployees } from '@/lib/mock-data';
 import { toast } from 'sonner';
 
-export function HrModule() {
+export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState<Department | 'All'>('All');
@@ -84,9 +84,11 @@ export function HrModule() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search by name or role..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="shrink-0">
-          <Plus className="mr-1 h-4 w-4" /> Add Employee
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowAddForm(true)} className="shrink-0">
+            <Plus className="mr-1 h-4 w-4" /> Add Employee
+          </Button>
+        )}
       </div>
 
       {/* Employee Grid */}

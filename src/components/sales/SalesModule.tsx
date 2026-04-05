@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 type ViewMode = 'pipeline' | 'team';
 
-export function SalesModule() {
+export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -73,9 +73,11 @@ export function SalesModule() {
           <button onClick={() => setViewMode('pipeline')} className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'pipeline' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Pipeline View</button>
           <button onClick={() => setViewMode('team')} className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'team' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Team Performance</button>
         </div>
-        <Button onClick={() => setShowAddForm(true)} size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Add Deal
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowAddForm(true)} size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Add Deal
+          </Button>
+        )}
       </div>
 
       {viewMode === 'pipeline' ? (

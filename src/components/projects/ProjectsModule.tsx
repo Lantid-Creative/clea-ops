@@ -25,7 +25,7 @@ const columnColors: Record<ProjectBoardColumn, string> = {
   'Done': 'border-t-success',
 };
 
-export function ProjectsModule() {
+export function ProjectsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [tasks, setTasks] = useState<ProjectTask[]>(mockTasks);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addToColumn, setAddToColumn] = useState<ProjectBoardColumn>('To Do');
@@ -57,9 +57,11 @@ export function ProjectsModule() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Project Board</h2>
-        <Button onClick={() => { setAddToColumn('To Do'); setShowAddForm(true); }} size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Add Task
-        </Button>
+        {canEdit && (
+          <Button onClick={() => { setAddToColumn('To Do'); setShowAddForm(true); }} size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Add Task
+          </Button>
+        )}
       </div>
 
       {/* Kanban Board */}
@@ -72,9 +74,11 @@ export function ProjectsModule() {
                 <span className="text-sm font-semibold">{column}</span>
                 <div className="flex items-center gap-1">
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{columnTasks.length}</span>
-                  <button onClick={() => { setAddToColumn(column); setShowAddForm(true); }} className="rounded p-0.5 text-muted-foreground hover:text-foreground">
-                    <Plus className="h-4 w-4" />
-                  </button>
+                  {canEdit && (
+                    <button onClick={() => { setAddToColumn(column); setShowAddForm(true); }} className="rounded p-0.5 text-muted-foreground hover:text-foreground">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex-1 space-y-2">
