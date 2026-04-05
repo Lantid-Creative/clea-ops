@@ -46,8 +46,8 @@ export function AppShell({ activeTab, onTabChange, children, onLogout, userRole 
           <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
             <LogOut className="h-4 w-4" />
           </Button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-            A
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground" title={userRole ? `Role: ${userRole}` : undefined}>
+            {userRole ? userRole.charAt(0).toUpperCase() : 'U'}
           </div>
         </div>
       </header>
