@@ -57,9 +57,11 @@ export function ProjectsModule({ canEdit = true }: { canEdit?: boolean }) {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Project Board</h2>
-        <Button onClick={() => { setAddToColumn('To Do'); setShowAddForm(true); }} size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Add Task
-        </Button>
+        {canEdit && (
+          <Button onClick={() => { setAddToColumn('To Do'); setShowAddForm(true); }} size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Add Task
+          </Button>
+        )}
       </div>
 
       {/* Kanban Board */}

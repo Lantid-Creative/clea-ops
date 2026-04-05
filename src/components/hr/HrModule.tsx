@@ -84,9 +84,11 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search by name or role..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="shrink-0">
-          <Plus className="mr-1 h-4 w-4" /> Add Employee
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowAddForm(true)} className="shrink-0">
+            <Plus className="mr-1 h-4 w-4" /> Add Employee
+          </Button>
+        )}
       </div>
 
       {/* Employee Grid */}
