@@ -62,7 +62,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          Demo mode: enter any credentials to continue
+          Sign in with your company credentials. Contact IT if you need access.
         </p>
       </div>
     </div>
