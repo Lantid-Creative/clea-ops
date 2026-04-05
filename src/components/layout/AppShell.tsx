@@ -9,6 +9,7 @@ interface AppShellProps {
   onTabChange: (tab: Tab) => void;
   children: React.ReactNode;
   onLogout: () => void;
+  userRole?: string | null;
 }
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
