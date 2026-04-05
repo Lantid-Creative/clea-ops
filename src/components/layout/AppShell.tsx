@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Users, BarChart3, Target, UserCog, LayoutDashboard, Menu, X, LogOut } from 'lucide-react';
+import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type Tab = 'clients' | 'sales' | 'kpis' | 'hr' | 'projects';
@@ -10,9 +9,10 @@ interface AppShellProps {
   children: React.ReactNode;
   onLogout: () => void;
   userRole?: string | null;
+  visibleTabs?: Tab[];
 }
 
-const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'clients', label: 'Clients', icon: <Users className="h-5 w-5" /> },
   { id: 'sales', label: 'Sales', icon: <BarChart3 className="h-5 w-5" /> },
   { id: 'kpis', label: 'KPIs', icon: <Target className="h-5 w-5" /> },
@@ -28,7 +28,9 @@ const tabLabels: Record<Tab, string> = {
   projects: 'Project Management',
 };
 
-export function AppShell({ activeTab, onTabChange, children, onLogout, userRole }: AppShellProps) {
+export function AppShell({ activeTab, onTabChange, children, onLogout, userRole, visibleTabs }: AppShellProps) {
+  const tabs = visibleTabs ? allTabs.filter((t) => visibleTabs.includes(t.id)) : allTabs;
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Top Header */}
@@ -43,6 +45,9 @@ export function AppShell({ activeTab, onTabChange, children, onLogout, userRole 
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {userRole && (
+            <span className="text-xs text-muted-foreground capitalize hidden sm:inline">{userRole}</span>
+          )}
           <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
             <LogOut className="h-4 w-4" />
           </Button>
