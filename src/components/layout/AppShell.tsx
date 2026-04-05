@@ -28,7 +28,7 @@ const tabLabels: Record<Tab, string> = {
   projects: 'Project Management',
 };
 
-export function AppShell({ activeTab, onTabChange, children, onLogout }: AppShellProps) {
+export function AppShell({ activeTab, onTabChange, children, onLogout, userRole }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Top Header */}
