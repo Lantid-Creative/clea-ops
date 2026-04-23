@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canView = (tab: string): boolean => {
     if (!role) return false;
+    if (tab === 'admin') return role === 'admin';
     if (role === 'admin') return true;
     if (role === 'manager') return true; // managers see all tabs (read-only on other depts)
     // Staff: only their department's tabs
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canEdit = (tab: string): boolean => {
     if (!role) return false;
+    if (tab === 'admin') return role === 'admin';
     if (role === 'admin') return true;
     if (role === 'manager') {
       // Managers can edit only their own department's tab
