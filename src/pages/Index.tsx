@@ -5,12 +5,13 @@ import { SalesModule } from '@/components/sales/SalesModule';
 import { KpisModule } from '@/components/kpis/KpisModule';
 import { HrModule } from '@/components/hr/HrModule';
 import { ProjectsModule } from '@/components/projects/ProjectsModule';
+import { AdminModule } from '@/components/admin/AdminModule';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 
-type Tab = 'clients' | 'sales' | 'kpis' | 'hr' | 'projects';
+type Tab = 'clients' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
-const ALL_TABS: Tab[] = ['clients', 'sales', 'kpis', 'hr', 'projects'];
+const ALL_TABS: Tab[] = ['clients', 'sales', 'kpis', 'hr', 'projects', 'admin'];
 
 const Index = () => {
   const { user, role, department, loading, signOut, canView, canEdit } = useAuth();
@@ -49,6 +50,7 @@ const Index = () => {
       {effectiveTab === 'kpis' && <KpisModule canEdit={canEdit('kpis')} />}
       {effectiveTab === 'hr' && <HrModule canEdit={canEdit('hr')} />}
       {effectiveTab === 'projects' && <ProjectsModule canEdit={canEdit('projects')} />}
+      {effectiveTab === 'admin' && <AdminModule />}
     </AppShell>
   );
 };

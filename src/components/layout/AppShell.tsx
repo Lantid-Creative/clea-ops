@@ -1,7 +1,7 @@
-import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut } from 'lucide-react';
+import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-type Tab = 'clients' | 'sales' | 'kpis' | 'hr' | 'projects';
+type Tab = 'clients' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
 interface AppShellProps {
   activeTab: Tab;
@@ -18,6 +18,7 @@ const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'kpis', label: 'KPIs', icon: <Target className="h-5 w-5" /> },
   { id: 'hr', label: 'HR', icon: <UserCog className="h-5 w-5" /> },
   { id: 'projects', label: 'Projects', icon: <LayoutDashboard className="h-5 w-5" /> },
+  { id: 'admin', label: 'Admin', icon: <Shield className="h-5 w-5" /> },
 ];
 
 const tabLabels: Record<Tab, string> = {
@@ -26,6 +27,7 @@ const tabLabels: Record<Tab, string> = {
   kpis: 'KPI Dashboard',
   hr: 'HR Directory',
   projects: 'Project Management',
+  admin: 'Team Administration',
 };
 
 export function AppShell({ activeTab, onTabChange, children, onLogout, userRole, visibleTabs }: AppShellProps) {
