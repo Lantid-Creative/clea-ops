@@ -5,10 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Lock, Mail, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+
+type Mode = 'login' | 'signup' | 'forgot';
 
 export function LoginPage() {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -16,14 +19,34 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || (mode === 'signup' && !fullName)) {
-      toast.error('Please fill in all fields');
+    if (!email) {
+      toast.error('Please enter your email');
       return;
     }
     if (!email.endsWith('@tryclea.com')) {
       toast.error('Only @tryclea.com email addresses are allowed');
       return;
     }
+
+    if (mode === 'forgot') {
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setLoading(false);
+      if (error) toast.error(error.message);
+      else {
+        toast.success('Password reset link sent. Check your inbox.');
+        setMode('login');
+      }
+      return;
+    }
+
+    if (!password || (mode === 'signup' && !fullName)) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
     if (mode === 'login') {
       const { error } = await signIn(email, password);
@@ -45,8 +68,12 @@ export function LoginPage() {
             C
           </div>
           <h1 className="text-2xl font-bold">Clea Ops</h1>
-          <p className="text-sm text-muted-foreground">Internal Operations Portal</p>
-          <p className="text-xs text-muted-foreground">Authorized personnel only</p>
+          <p className="text-sm text-muted-foreground">
+            {mode === 'forgot' ? 'Reset your password' : 'Internal Operations Portal'}
+          </p>
+          {mode !== 'forgot' && (
+            <p className="text-xs text-muted-foreground">Authorized personnel only</p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,24 +93,49 @@ export function LoginPage() {
               <Input id="email" type="email" placeholder="you@tryclea.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9" />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-9" />
+          {mode !== 'forgot' && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => setMode('forgot')}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-9" />
+              </div>
             </div>
-          </div>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign In' : 'Create Account')}
+            {loading
+              ? 'Please wait...'
+              : mode === 'login'
+              ? 'Sign In'
+              : mode === 'signup'
+              ? 'Create Account'
+              : 'Send Reset Link'}
           </Button>
         </form>
 
         <div className="text-center">
-          {mode === 'login' ? (
+          {mode === 'login' && (
             <button onClick={() => setMode('signup')} className="text-sm text-primary hover:underline">
               New team member? Create your account
             </button>
-          ) : (
+          )}
+          {mode === 'signup' && (
+            <button onClick={() => setMode('login')} className="text-sm text-primary hover:underline flex items-center justify-center gap-1 mx-auto">
+              <ArrowLeft className="h-3 w-3" /> Back to sign in
+            </button>
+          )}
+          {mode === 'forgot' && (
             <button onClick={() => setMode('login')} className="text-sm text-primary hover:underline flex items-center justify-center gap-1 mx-auto">
               <ArrowLeft className="h-3 w-3" /> Back to sign in
             </button>
