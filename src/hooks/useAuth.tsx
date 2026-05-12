@@ -40,9 +40,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchRoleAndDept = async (userId: string) => {
     const { data } = await supabase
       .from('user_roles')
-      .select('role, department')
+      .select('role, department, is_active')
       .eq('user_id', userId)
       .single();
+    if (data && data.is_active === false) {
+      await supabase.auth.signOut();
+      setRole(null);
+      setDepartment(null);
+      return;
+    }
     setRole((data?.role as AppRole) ?? 'staff');
     setDepartment((data?.department as AppDepartment) ?? null);
   };
