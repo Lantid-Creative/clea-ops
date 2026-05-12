@@ -41,6 +41,63 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          archived: boolean
+          assigned_specialist: string
+          company_name: string
+          contact_person: string
+          country: string
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          industry: string
+          kyc_documents: Json
+          onboard_date: string | null
+          phone: string
+          stage: Database["public"]["Enums"]["client_stage"]
+          transaction_volume: number
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          assigned_specialist?: string
+          company_name: string
+          contact_person?: string
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          industry?: string
+          kyc_documents?: Json
+          onboard_date?: string | null
+          phone?: string
+          stage?: Database["public"]["Enums"]["client_stage"]
+          transaction_volume?: number
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          assigned_specialist?: string
+          company_name?: string
+          contact_person?: string
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          industry?: string
+          kyc_documents?: Json
+          onboard_date?: string | null
+          phone?: string
+          stage?: Database["public"]["Enums"]["client_stage"]
+          transaction_volume?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -97,6 +154,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_edit_clients: { Args: { _user_id: string }; Returns: boolean }
       get_user_department: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_department"]
@@ -119,6 +177,13 @@ export type Database = {
         | "design"
         | "operations"
       app_role: "admin" | "manager" | "staff"
+      client_stage:
+        | "Lead"
+        | "KYC Submitted"
+        | "KYC Review"
+        | "Verified"
+        | "Onboarded"
+        | "Active"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -255,6 +320,14 @@ export const Constants = {
         "operations",
       ],
       app_role: ["admin", "manager", "staff"],
+      client_stage: [
+        "Lead",
+        "KYC Submitted",
+        "KYC Review",
+        "Verified",
+        "Onboarded",
+        "Active",
+      ],
     },
   },
 } as const
