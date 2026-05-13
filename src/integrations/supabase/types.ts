@@ -125,6 +125,162 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+          ticket_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          ticket_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          ticket_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_attachments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          archived: boolean
+          assignee_id: string | null
+          category: string
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          due_date: string | null
+          first_response_at: string | null
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          requester_email: string
+          requester_name: string
+          resolved_at: string | null
+          source: Database["public"]["Enums"]["ticket_source"]
+          status: Database["public"]["Enums"]["ticket_status"]
+          tags: string[]
+          ticket_number: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          assignee_id?: string | null
+          category?: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          first_response_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          requester_email?: string
+          requester_name?: string
+          resolved_at?: string | null
+          source?: Database["public"]["Enums"]["ticket_source"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          tags?: string[]
+          ticket_number?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          assignee_id?: string | null
+          category?: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          first_response_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          requester_email?: string
+          requester_name?: string
+          resolved_at?: string | null
+          source?: Database["public"]["Enums"]["ticket_source"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          tags?: string[]
+          ticket_number?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           department: Database["public"]["Enums"]["app_department"] | null
@@ -155,6 +311,7 @@ export type Database = {
     }
     Functions: {
       can_edit_clients: { Args: { _user_id: string }; Returns: boolean }
+      can_edit_tickets: { Args: { _user_id: string }; Returns: boolean }
       get_user_department: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_department"]
@@ -184,6 +341,14 @@ export type Database = {
         | "Verified"
         | "Onboarded"
         | "Active"
+      ticket_priority: "low" | "medium" | "high" | "urgent"
+      ticket_source: "staff" | "portal" | "crm_import" | "email"
+      ticket_status:
+        | "open"
+        | "in_progress"
+        | "waiting_on_client"
+        | "resolved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -327,6 +492,15 @@ export const Constants = {
         "Verified",
         "Onboarded",
         "Active",
+      ],
+      ticket_priority: ["low", "medium", "high", "urgent"],
+      ticket_source: ["staff", "portal", "crm_import", "email"],
+      ticket_status: [
+        "open",
+        "in_progress",
+        "waiting_on_client",
+        "resolved",
+        "closed",
       ],
     },
   },
