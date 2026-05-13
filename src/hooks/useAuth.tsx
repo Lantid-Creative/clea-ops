@@ -24,10 +24,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEPARTMENT_TAB_MAP: Record<AppDepartment, string[]> = {
   sales: ['sales'],
   marketing: ['kpis'],
-  customer_success: ['clients'],
-  engineering: ['projects', 'kpis'],
+  customer_success: ['clients', 'tickets'],
+  engineering: ['projects', 'kpis', 'tickets'],
   design: ['projects', 'kpis'],
-  operations: ['clients', 'hr', 'kpis'],
+  operations: ['clients', 'hr', 'kpis', 'tickets'],
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
