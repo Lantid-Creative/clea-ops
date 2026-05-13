@@ -1,7 +1,7 @@
-import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket } from 'lucide-react';
+import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
+type Tab = 'clients' | 'tickets' | 'inbox' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
 interface AppShellProps {
   activeTab: Tab;
@@ -15,6 +15,7 @@ interface AppShellProps {
 const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'clients', label: 'Clients', icon: <Users className="h-5 w-5" /> },
   { id: 'tickets', label: 'Tickets', icon: <Ticket className="h-5 w-5" /> },
+  { id: 'inbox', label: 'Inbox', icon: <Mail className="h-5 w-5" /> },
   { id: 'sales', label: 'Sales', icon: <BarChart3 className="h-5 w-5" /> },
   { id: 'kpis', label: 'KPIs', icon: <Target className="h-5 w-5" /> },
   { id: 'hr', label: 'HR', icon: <UserCog className="h-5 w-5" /> },
@@ -25,6 +26,7 @@ const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 const tabLabels: Record<Tab, string> = {
   clients: 'Client Onboarding & Compliance',
   tickets: 'Tickets & Support',
+  inbox: 'My Mailbox',
   sales: 'Sales Pipeline & Commission',
   kpis: 'KPI Dashboard',
   hr: 'HR Directory',
