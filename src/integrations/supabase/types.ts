@@ -98,6 +98,107 @@ export type Database = {
         }
         Relationships: []
       }
+      email_accounts: {
+        Row: {
+          created_at: string
+          display_name: string
+          email_address: string
+          id: string
+          imap_host: string
+          imap_port: number
+          last_synced_at: string | null
+          last_verified_at: string | null
+          password_ciphertext: string
+          password_iv: string
+          password_tag: string
+          smtp_host: string
+          smtp_port: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          email_address: string
+          id?: string
+          imap_host?: string
+          imap_port?: number
+          last_synced_at?: string | null
+          last_verified_at?: string | null
+          password_ciphertext: string
+          password_iv: string
+          password_tag: string
+          smtp_host?: string
+          smtp_port?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email_address?: string
+          id?: string
+          imap_host?: string
+          imap_port?: number
+          last_synced_at?: string | null
+          last_verified_at?: string | null
+          password_ciphertext?: string
+          password_iv?: string
+          password_tag?: string
+          smtp_host?: string
+          smtp_port?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_message_links: {
+        Row: {
+          account_id: string
+          created_at: string
+          folder: string
+          from_address: string
+          id: string
+          linked_by: string | null
+          message_date: string | null
+          message_uid: string
+          subject: string
+          ticket_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          folder?: string
+          from_address?: string
+          id?: string
+          linked_by?: string | null
+          message_date?: string | null
+          message_uid: string
+          subject?: string
+          ticket_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          folder?: string
+          from_address?: string
+          id?: string
+          linked_by?: string | null
+          message_date?: string | null
+          message_uid?: string
+          subject?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_message_links_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "email_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
