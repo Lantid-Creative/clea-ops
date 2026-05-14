@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Search, Plus, Ticket as TicketIcon, AlertCircle, CheckCircle2, Clock, Download, Paperclip, MessageSquare, Trash2, Archive, ArchiveRestore } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
+import { Search, Plus, Ticket as TicketIcon, AlertCircle, CheckCircle2, Clock, Download, Upload, Paperclip, MessageSquare, Trash2, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -114,6 +116,10 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [newComment, setNewComment] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -282,6 +288,83 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
     URL.revokeObjectURL(url);
   };
 
+  const downloadTemplate = () => {
+    const header = ['title','description','category','priority','requester_name','requester_email','due_date','tags'];
+    const sample = ['KYC review needed','Client uploaded passport','kyc','high','Jane Doe','jane@acme.com','2026-06-01','kyc|review'];
+    const csv = [header, sample].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'tickets-import-template.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const normalizeRow = (raw: any) => {
+    const get = (k: string) => {
+      const key = Object.keys(raw).find((x) => x.toLowerCase().trim() === k);
+      return key ? String(raw[key] ?? '').trim() : '';
+    };
+    const priority = (get('priority') || 'medium').toLowerCase();
+    const category = (get('category') || 'general').toLowerCase();
+    const tagsStr = get('tags');
+    const due = get('due_date') || get('due date');
+    return {
+      title: get('title'),
+      description: get('description'),
+      category: CATEGORIES.includes(category) ? category : 'general',
+      priority: (PRIORITIES as string[]).includes(priority) ? priority : 'medium',
+      requester_name: get('requester_name') || get('requester name'),
+      requester_email: get('requester_email') || get('requester email'),
+      due_date: due ? new Date(due).toISOString() : null,
+      tags: tagsStr ? tagsStr.split(/[|,;]/).map((s) => s.trim()).filter(Boolean) : [],
+    };
+  };
+
+  const handleImportFile = async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    let rows: any[] = [];
+    try {
+      if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
+        const text = await file.text();
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+        rows = parsed.data as any[];
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      } else {
+        toast.error('Unsupported file type. Use CSV or Excel.');
+        return;
+      }
+    } catch (e: any) {
+      toast.error('Could not parse file: ' + e.message);
+      return;
+    }
+    const normalized = rows.map(normalizeRow).filter((r) => r.title);
+    if (!normalized.length) { toast.error('No rows with a title found'); return; }
+    setImportPreview(normalized);
+    setImportOpen(true);
+  };
+
+  const confirmImport = async () => {
+    if (!importPreview.length) return;
+    setImporting(true);
+    const payload = importPreview.map((r) => ({
+      ...r,
+      source: 'crm_import' as const,
+      created_by: user?.id ?? null,
+    }));
+    const { error } = await supabase.from('tickets').insert(payload);
+    setImporting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Imported ${payload.length} ticket${payload.length === 1 ? '' : 's'}`);
+    setImportOpen(false);
+    setImportPreview([]);
+    if (importInputRef.current) importInputRef.current.value = '';
+    load();
+  };
+
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -315,9 +398,21 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
         </Button>
         <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4" /> CSV</Button>
         {canEdit && (
-          <Button size="sm" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
-            <Plus className="h-4 w-4" /> New ticket
-          </Button>
+          <>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".csv,.tsv,.txt,.xlsx,.xls"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+            />
+            <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()}>
+              <Upload className="h-4 w-4" /> Import
+            </Button>
+            <Button size="sm" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
+              <Plus className="h-4 w-4" /> New ticket
+            </Button>
+          </>
         )}
       </div>
 
@@ -544,6 +639,51 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk import dialog */}
+      <Dialog open={importOpen} onOpenChange={(o) => { if (!o) { setImportOpen(false); setImportPreview([]); if (importInputRef.current) importInputRef.current.value = ''; } }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import tickets ({importPreview.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Preview of rows to be created. Each row becomes a new ticket.</span>
+              <Button variant="link" size="sm" onClick={downloadTemplate}>Download CSV template</Button>
+            </div>
+            <div className="rounded-md border max-h-[50vh] overflow-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-muted sticky top-0">
+                  <tr>
+                    <th className="p-2 text-left">Title</th>
+                    <th className="p-2 text-left">Category</th>
+                    <th className="p-2 text-left">Priority</th>
+                    <th className="p-2 text-left">Requester</th>
+                    <th className="p-2 text-left">Due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importPreview.slice(0, 200).map((r, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="p-2 truncate max-w-[280px]">{r.title}</td>
+                      <td className="p-2 capitalize">{r.category}</td>
+                      <td className="p-2 capitalize">{r.priority}</td>
+                      <td className="p-2 truncate">{r.requester_name || r.requester_email}</td>
+                      <td className="p-2">{r.due_date ? new Date(r.due_date).toLocaleDateString() : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setImportOpen(false); setImportPreview([]); }} disabled={importing}>Cancel</Button>
+              <Button onClick={confirmImport} disabled={importing}>
+                {importing ? 'Importing…' : `Create ${importPreview.length} ticket${importPreview.length === 1 ? '' : 's'}`}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
