@@ -116,6 +116,10 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [newComment, setNewComment] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
