@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Search, Plus, Ticket as TicketIcon, AlertCircle, CheckCircle2, Clock, Download, Paperclip, MessageSquare, Trash2, Archive, ArchiveRestore } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
+import { Search, Plus, Ticket as TicketIcon, AlertCircle, CheckCircle2, Clock, Download, Upload, Paperclip, MessageSquare, Trash2, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
