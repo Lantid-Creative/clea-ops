@@ -641,6 +641,51 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Bulk import dialog */}
+      <Dialog open={importOpen} onOpenChange={(o) => { if (!o) { setImportOpen(false); setImportPreview([]); if (importInputRef.current) importInputRef.current.value = ''; } }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import tickets ({importPreview.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Preview of rows to be created. Each row becomes a new ticket.</span>
+              <Button variant="link" size="sm" onClick={downloadTemplate}>Download CSV template</Button>
+            </div>
+            <div className="rounded-md border max-h-[50vh] overflow-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-muted sticky top-0">
+                  <tr>
+                    <th className="p-2 text-left">Title</th>
+                    <th className="p-2 text-left">Category</th>
+                    <th className="p-2 text-left">Priority</th>
+                    <th className="p-2 text-left">Requester</th>
+                    <th className="p-2 text-left">Due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importPreview.slice(0, 200).map((r, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="p-2 truncate max-w-[280px]">{r.title}</td>
+                      <td className="p-2 capitalize">{r.category}</td>
+                      <td className="p-2 capitalize">{r.priority}</td>
+                      <td className="p-2 truncate">{r.requester_name || r.requester_email}</td>
+                      <td className="p-2">{r.due_date ? new Date(r.due_date).toLocaleDateString() : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setImportOpen(false); setImportPreview([]); }} disabled={importing}>Cancel</Button>
+              <Button onClick={confirmImport} disabled={importing}>
+                {importing ? 'Importing…' : `Create ${importPreview.length} ticket${importPreview.length === 1 ? '' : 's'}`}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
