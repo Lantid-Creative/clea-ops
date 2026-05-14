@@ -81,8 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const canView = (tab: string): boolean => {
     if (!role) return false;
     if (tab === 'admin') return role === 'admin';
-    // Inbox is personal — every signed-in user gets their own mailbox
-    if (tab === 'inbox') return true;
     if (role === 'admin') return true;
     if (role === 'manager') return true; // managers see all tabs (read-only on other depts)
     // Staff: only their department's tabs

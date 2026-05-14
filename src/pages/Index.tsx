@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { ClientsModule } from '@/components/clients/ClientsModule';
 import { TicketsModule } from '@/components/tickets/TicketsModule';
-import { InboxModule } from '@/components/inbox/InboxModule';
 import { SalesModule } from '@/components/sales/SalesModule';
 import { KpisModule } from '@/components/kpis/KpisModule';
 import { HrModule } from '@/components/hr/HrModule';
@@ -11,9 +10,9 @@ import { AdminModule } from '@/components/admin/AdminModule';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { useAuth } from '@/hooks/useAuth';
 
-type Tab = 'clients' | 'tickets' | 'inbox' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
+type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
-const ALL_TABS: Tab[] = ['clients', 'tickets', 'inbox', 'sales', 'kpis', 'hr', 'projects', 'admin'];
+const ALL_TABS: Tab[] = ['clients', 'tickets', 'sales', 'kpis', 'hr', 'projects', 'admin'];
 
 const Index = () => {
   const { user, role, department, loading, signOut, canView, canEdit } = useAuth();
@@ -49,7 +48,6 @@ const Index = () => {
     >
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
-      {effectiveTab === 'inbox' && <InboxModule />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
       {effectiveTab === 'kpis' && <KpisModule canEdit={canEdit('kpis')} />}
       {effectiveTab === 'hr' && <HrModule canEdit={canEdit('hr')} />}
