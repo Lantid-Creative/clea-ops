@@ -398,9 +398,21 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
         </Button>
         <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4" /> CSV</Button>
         {canEdit && (
-          <Button size="sm" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
-            <Plus className="h-4 w-4" /> New ticket
-          </Button>
+          <>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".csv,.tsv,.txt,.xlsx,.xls"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+            />
+            <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()}>
+              <Upload className="h-4 w-4" /> Import
+            </Button>
+            <Button size="sm" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
+              <Plus className="h-4 w-4" /> New ticket
+            </Button>
+          </>
         )}
       </div>
 
