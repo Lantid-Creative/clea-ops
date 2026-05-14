@@ -288,6 +288,83 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
     URL.revokeObjectURL(url);
   };
 
+  const downloadTemplate = () => {
+    const header = ['title','description','category','priority','requester_name','requester_email','due_date','tags'];
+    const sample = ['KYC review needed','Client uploaded passport','kyc','high','Jane Doe','jane@acme.com','2026-06-01','kyc|review'];
+    const csv = [header, sample].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'tickets-import-template.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const normalizeRow = (raw: any) => {
+    const get = (k: string) => {
+      const key = Object.keys(raw).find((x) => x.toLowerCase().trim() === k);
+      return key ? String(raw[key] ?? '').trim() : '';
+    };
+    const priority = (get('priority') || 'medium').toLowerCase();
+    const category = (get('category') || 'general').toLowerCase();
+    const tagsStr = get('tags');
+    const due = get('due_date') || get('due date');
+    return {
+      title: get('title'),
+      description: get('description'),
+      category: CATEGORIES.includes(category) ? category : 'general',
+      priority: (PRIORITIES as string[]).includes(priority) ? priority : 'medium',
+      requester_name: get('requester_name') || get('requester name'),
+      requester_email: get('requester_email') || get('requester email'),
+      due_date: due ? new Date(due).toISOString() : null,
+      tags: tagsStr ? tagsStr.split(/[|,;]/).map((s) => s.trim()).filter(Boolean) : [],
+    };
+  };
+
+  const handleImportFile = async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    let rows: any[] = [];
+    try {
+      if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
+        const text = await file.text();
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+        rows = parsed.data as any[];
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      } else {
+        toast.error('Unsupported file type. Use CSV or Excel.');
+        return;
+      }
+    } catch (e: any) {
+      toast.error('Could not parse file: ' + e.message);
+      return;
+    }
+    const normalized = rows.map(normalizeRow).filter((r) => r.title);
+    if (!normalized.length) { toast.error('No rows with a title found'); return; }
+    setImportPreview(normalized);
+    setImportOpen(true);
+  };
+
+  const confirmImport = async () => {
+    if (!importPreview.length) return;
+    setImporting(true);
+    const payload = importPreview.map((r) => ({
+      ...r,
+      source: 'crm_import' as const,
+      created_by: user?.id ?? null,
+    }));
+    const { error } = await supabase.from('tickets').insert(payload);
+    setImporting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Imported ${payload.length} ticket${payload.length === 1 ? '' : 's'}`);
+    setImportOpen(false);
+    setImportPreview([]);
+    if (importInputRef.current) importInputRef.current.value = '';
+    load();
+  };
+
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
