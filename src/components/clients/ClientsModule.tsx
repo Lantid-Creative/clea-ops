@@ -378,23 +378,33 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((client) => (
             <div key={client.id} onClick={() => setSelectedClient(client)} className="stat-card cursor-pointer space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold">{client.company_name}</h3>
-                  <p className="text-sm text-muted-foreground">{client.contact_person || '—'}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold truncate">{client.company_name}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{client.email || client.contact_person || '—'}</p>
                 </div>
-                <span className={`dept-badge ${client.stage === 'Active' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
-                  {client.stage}
-                </span>
+                {client.user_type && (
+                  <span className="dept-badge bg-muted text-muted-foreground shrink-0">{client.user_type}</span>
+                )}
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{client.country || '—'}</span>
-                <span className="font-medium text-foreground">{formatCurrency(client.transaction_volume)}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {client.onboarding_status && (
+                  <span className={`dept-badge ${client.onboarding_status === 'Completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
+                    {client.onboarding_status}
+                  </span>
+                )}
+                {client.engagement_status && (
+                  <span className={`dept-badge ${client.engagement_status === 'Active' ? 'bg-success/10 text-success' : client.engagement_status === 'Low' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>
+                    {client.engagement_status}
+                  </span>
+                )}
+                {client.follow_up_required && (
+                  <span className="dept-badge bg-warning/10 text-warning"><AlertCircle className="mr-1 h-3 w-3 inline" />Follow up</span>
+                )}
               </div>
-              <div className="flex gap-1">
-                {KYC_DOCUMENTS.map((doc, i) => (
-                  <div key={i} className={`h-1.5 flex-1 rounded-full ${client.kyc_documents[doc] ? 'bg-success' : 'bg-border'}`} />
-                ))}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="truncate">{client.assigned_agent || client.country || '—'}</span>
+                <span>{client.registration_date ? new Date(client.registration_date).toLocaleDateString() : ''}</span>
               </div>
             </div>
           ))}
