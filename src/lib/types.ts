@@ -14,6 +14,16 @@ export interface Client {
   transaction_volume: number;
   onboard_date: string | null;
   created_at: string;
+  user_type?: string;
+  first_name?: string;
+  last_name?: string;
+  registration_date?: string | null;
+  onboarding_status?: string;
+  engagement_status?: string;
+  last_contact_date?: string | null;
+  follow_up_required?: boolean;
+  assigned_agent?: string;
+  notes?: string;
 }
 
 export type DealStage = 'Prospect' | 'Contacted' | 'Proposal' | 'Negotiation' | 'Won' | 'Lost';

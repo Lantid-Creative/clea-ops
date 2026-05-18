@@ -44,6 +44,7 @@ export type Database = {
       clients: {
         Row: {
           archived: boolean
+          assigned_agent: string
           assigned_specialist: string
           company_name: string
           contact_person: string
@@ -51,17 +52,27 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string
+          engagement_status: string
+          first_name: string
+          follow_up_required: boolean
           id: string
           industry: string
           kyc_documents: Json
+          last_contact_date: string | null
+          last_name: string
+          notes: string
           onboard_date: string | null
+          onboarding_status: string
           phone: string
+          registration_date: string | null
           stage: Database["public"]["Enums"]["client_stage"]
           transaction_volume: number
           updated_at: string
+          user_type: string
         }
         Insert: {
           archived?: boolean
+          assigned_agent?: string
           assigned_specialist?: string
           company_name: string
           contact_person?: string
@@ -69,17 +80,27 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string
+          engagement_status?: string
+          first_name?: string
+          follow_up_required?: boolean
           id?: string
           industry?: string
           kyc_documents?: Json
+          last_contact_date?: string | null
+          last_name?: string
+          notes?: string
           onboard_date?: string | null
+          onboarding_status?: string
           phone?: string
+          registration_date?: string | null
           stage?: Database["public"]["Enums"]["client_stage"]
           transaction_volume?: number
           updated_at?: string
+          user_type?: string
         }
         Update: {
           archived?: boolean
+          assigned_agent?: string
           assigned_specialist?: string
           company_name?: string
           contact_person?: string
@@ -87,14 +108,23 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string
+          engagement_status?: string
+          first_name?: string
+          follow_up_required?: boolean
           id?: string
           industry?: string
           kyc_documents?: Json
+          last_contact_date?: string | null
+          last_name?: string
+          notes?: string
           onboard_date?: string | null
+          onboarding_status?: string
           phone?: string
+          registration_date?: string | null
           stage?: Database["public"]["Enums"]["client_stage"]
           transaction_volume?: number
           updated_at?: string
+          user_type?: string
         }
         Relationships: []
       }

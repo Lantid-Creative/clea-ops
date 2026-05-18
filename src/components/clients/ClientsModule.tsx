@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil, Upload, AlertCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatCard } from '@/components/layout/StatCard';
@@ -10,6 +11,52 @@ import { Client, ClientStage, CLIENT_STAGES, KYC_DOCUMENTS } from '@/lib/types';
 import { formatCurrency, formatNumber } from '@/lib/helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+type ImportRow = {
+  user_type: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  registration_date: string | null;
+  onboarding_status: string;
+  engagement_status: string;
+  last_contact_date: string | null;
+  follow_up_required: boolean;
+  assigned_agent: string;
+  notes: string;
+};
+
+const HEADER_MAP: Record<string, keyof ImportRow> = {
+  'user type': 'user_type',
+  'first name': 'first_name',
+  'last name': 'last_name',
+  'email': 'email',
+  'phone number': 'phone',
+  'phone': 'phone',
+  'registration date': 'registration_date',
+  'onboarding status': 'onboarding_status',
+  'engagement status': 'engagement_status',
+  'last contact date': 'last_contact_date',
+  'follow-up required': 'follow_up_required',
+  'follow up required': 'follow_up_required',
+  'assigned agent': 'assigned_agent',
+  'notes': 'notes',
+};
+
+function parseDate(v: any): string | null {
+  if (v == null || v === '') return null;
+  if (v instanceof Date) return v.toISOString();
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function parseBool(v: any): boolean {
+  if (typeof v === 'boolean') return v;
+  if (v == null) return false;
+  const s = String(v).toLowerCase().trim();
+  return s === 'true' || s === 'yes' || s === '1' || s === 'y';
+}
 
 type ClientFormData = {
   company_name: string;
@@ -40,6 +87,16 @@ function rowToClient(r: any): Client {
     transaction_volume: Number(r.transaction_volume ?? 0),
     onboard_date: r.onboard_date,
     created_at: r.created_at,
+    user_type: r.user_type ?? '',
+    first_name: r.first_name ?? '',
+    last_name: r.last_name ?? '',
+    registration_date: r.registration_date ?? null,
+    onboarding_status: r.onboarding_status ?? '',
+    engagement_status: r.engagement_status ?? '',
+    last_contact_date: r.last_contact_date ?? null,
+    follow_up_required: !!r.follow_up_required,
+    assigned_agent: r.assigned_agent ?? '',
+    notes: r.notes ?? '',
   };
 }
 
@@ -53,6 +110,111 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
+  const [onboardingFilter, setOnboardingFilter] = useState<string>('All');
+  const [engagementFilter, setEngagementFilter] = useState<string>('All');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; errors: string[] } | null>(null);
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw: any[] = XLSX.utils.sheet_to_json(ws, { defval: '', raw: true });
+
+      const rows: ImportRow[] = [];
+      const errors: string[] = [];
+      raw.forEach((r, idx) => {
+        const mapped: any = {};
+        Object.keys(r).forEach((k) => {
+          const key = HEADER_MAP[String(k).trim().toLowerCase()];
+          if (key) mapped[key] = r[k];
+        });
+        const email = String(mapped.email ?? '').trim().toLowerCase();
+        if (!email) { errors.push(`Row ${idx + 2}: missing email`); return; }
+        rows.push({
+          user_type: String(mapped.user_type ?? '').trim(),
+          first_name: String(mapped.first_name ?? '').trim(),
+          last_name: String(mapped.last_name ?? '').trim(),
+          email,
+          phone: mapped.phone == null ? '' : String(mapped.phone).trim(),
+          registration_date: parseDate(mapped.registration_date),
+          onboarding_status: String(mapped.onboarding_status ?? '').trim(),
+          engagement_status: String(mapped.engagement_status ?? '').trim(),
+          last_contact_date: parseDate(mapped.last_contact_date),
+          follow_up_required: parseBool(mapped.follow_up_required),
+          assigned_agent: String(mapped.assigned_agent ?? '').trim(),
+          notes: String(mapped.notes ?? '').trim(),
+        });
+      });
+
+      const uniq = new Map<string, ImportRow>();
+      rows.forEach((r) => uniq.set(r.email, r));
+      const emails = Array.from(uniq.keys());
+
+      const { data: existing, error: fetchErr } = await supabase
+        .from('clients').select('id,email').in('email', emails);
+      if (fetchErr) throw fetchErr;
+      const byEmail = new Map<string, string>();
+      (existing ?? []).forEach((c: any) => byEmail.set(String(c.email).toLowerCase(), c.id));
+
+      const { data: { user } } = await supabase.auth.getUser();
+      let created = 0, updated = 0;
+
+      for (const r of uniq.values()) {
+        const fullName = `${r.first_name} ${r.last_name}`.trim();
+        const payload: any = {
+          email: r.email,
+          contact_person: fullName,
+          company_name: fullName || r.email,
+          phone: r.phone,
+          user_type: r.user_type,
+          first_name: r.first_name,
+          last_name: r.last_name,
+          registration_date: r.registration_date,
+          onboarding_status: r.onboarding_status,
+          engagement_status: r.engagement_status,
+          last_contact_date: r.last_contact_date,
+          follow_up_required: r.follow_up_required,
+          assigned_agent: r.assigned_agent,
+          notes: r.notes,
+        };
+        const existingId = byEmail.get(r.email);
+        if (existingId) {
+          const { error } = await supabase.from('clients').update(payload).eq('id', existingId);
+          if (error) errors.push(`${r.email}: ${error.message}`);
+          else updated++;
+        } else {
+          const kyc = Object.fromEntries(KYC_DOCUMENTS.map((d) => [d, false]));
+          const { error } = await supabase.from('clients').insert({
+            ...payload,
+            stage: 'Lead',
+            kyc_documents: kyc,
+            transaction_volume: 0,
+            created_by: user?.id ?? null,
+          });
+          if (error) errors.push(`${r.email}: ${error.message}`);
+          else created++;
+        }
+      }
+
+      setImportResult({ created, updated, skipped: rows.length - uniq.size, errors });
+      toast.success(`Imported ${created} new, updated ${updated}`);
+      load();
+    } catch (err: any) {
+      toast.error(err.message ?? 'Import failed');
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -76,11 +238,16 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
 
   const visible = clients.filter((c) => showArchived ? archivedSet[c.id] : !archivedSet[c.id]);
 
+  const onboardingOptions = Array.from(new Set(visible.map((c) => c.onboarding_status).filter(Boolean))) as string[];
+  const engagementOptions = Array.from(new Set(visible.map((c) => c.engagement_status).filter(Boolean))) as string[];
+
   const filtered = visible.filter((c) => {
     const q = search.toLowerCase();
-    const matchSearch = !q || c.company_name.toLowerCase().includes(q) || c.contact_person.toLowerCase().includes(q);
+    const matchSearch = !q || c.company_name.toLowerCase().includes(q) || c.contact_person.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
     const matchStage = stageFilter === 'All' || c.stage === stageFilter;
-    return matchSearch && matchStage;
+    const matchOnboarding = onboardingFilter === 'All' || c.onboarding_status === onboardingFilter;
+    const matchEngagement = engagementFilter === 'All' || c.engagement_status === engagementFilter;
+    return matchSearch && matchStage && matchOnboarding && matchEngagement;
   });
 
   const stageCounts = CLIENT_STAGES.reduce((acc, s) => {
@@ -165,15 +332,39 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by company or contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Search by name, contact, or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        {onboardingOptions.length > 0 && (
+          <Select value={onboardingFilter} onValueChange={setOnboardingFilter}>
+            <SelectTrigger className="w-[170px] shrink-0"><SelectValue placeholder="Onboarding" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All onboarding</SelectItem>
+              {onboardingOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        {engagementOptions.length > 0 && (
+          <Select value={engagementFilter} onValueChange={setEngagementFilter}>
+            <SelectTrigger className="w-[170px] shrink-0"><SelectValue placeholder="Engagement" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All engagement</SelectItem>
+              {engagementOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         <Button variant={showArchived ? 'default' : 'outline'} onClick={() => setShowArchived((v) => !v)} className="shrink-0">
           <Archive className="mr-1 h-4 w-4" /> {showArchived ? 'Showing archived' : 'Show archived'}
         </Button>
         {canEdit && !showArchived && (
-          <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="shrink-0">
-            <Plus className="mr-1 h-4 w-4" /> Add Client
-          </Button>
+          <>
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileSelected} />
+            <Button variant="outline" onClick={handleImportClick} disabled={importing} className="shrink-0">
+              <Upload className="mr-1 h-4 w-4" /> {importing ? 'Importing...' : 'Bulk import'}
+            </Button>
+            <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="shrink-0">
+              <Plus className="mr-1 h-4 w-4" /> Add Client
+            </Button>
+          </>
         )}
       </div>
 
@@ -187,23 +378,33 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((client) => (
             <div key={client.id} onClick={() => setSelectedClient(client)} className="stat-card cursor-pointer space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold">{client.company_name}</h3>
-                  <p className="text-sm text-muted-foreground">{client.contact_person || '—'}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold truncate">{client.company_name}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{client.email || client.contact_person || '—'}</p>
                 </div>
-                <span className={`dept-badge ${client.stage === 'Active' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
-                  {client.stage}
-                </span>
+                {client.user_type && (
+                  <span className="dept-badge bg-muted text-muted-foreground shrink-0">{client.user_type}</span>
+                )}
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{client.country || '—'}</span>
-                <span className="font-medium text-foreground">{formatCurrency(client.transaction_volume)}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {client.onboarding_status && (
+                  <span className={`dept-badge ${client.onboarding_status === 'Completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
+                    {client.onboarding_status}
+                  </span>
+                )}
+                {client.engagement_status && (
+                  <span className={`dept-badge ${client.engagement_status === 'Active' ? 'bg-success/10 text-success' : client.engagement_status === 'Low' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>
+                    {client.engagement_status}
+                  </span>
+                )}
+                {client.follow_up_required && (
+                  <span className="dept-badge bg-warning/10 text-warning"><AlertCircle className="mr-1 h-3 w-3 inline" />Follow up</span>
+                )}
               </div>
-              <div className="flex gap-1">
-                {KYC_DOCUMENTS.map((doc, i) => (
-                  <div key={i} className={`h-1.5 flex-1 rounded-full ${client.kyc_documents[doc] ? 'bg-success' : 'bg-border'}`} />
-                ))}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="truncate">{client.assigned_agent || client.country || '—'}</span>
+                <span>{client.registration_date ? new Date(client.registration_date).toLocaleDateString() : ''}</span>
               </div>
             </div>
           ))}
@@ -292,6 +493,35 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
             onSubmit={saveClient}
             onCancel={() => { setFormOpen(false); setEditing(null); }}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Result Dialog */}
+      <Dialog open={!!importResult} onOpenChange={() => setImportResult(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import complete</DialogTitle>
+            <DialogDescription>
+              Customers matched by email are updated; new emails are added.
+            </DialogDescription>
+          </DialogHeader>
+          {importResult && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg border p-2"><div className="text-2xl font-semibold text-success">{importResult.created}</div><div className="text-xs text-muted-foreground">Added</div></div>
+                <div className="rounded-lg border p-2"><div className="text-2xl font-semibold text-primary">{importResult.updated}</div><div className="text-xs text-muted-foreground">Updated</div></div>
+                <div className="rounded-lg border p-2"><div className="text-2xl font-semibold text-muted-foreground">{importResult.skipped}</div><div className="text-xs text-muted-foreground">Duplicates</div></div>
+              </div>
+              {importResult.errors.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-1">Errors ({importResult.errors.length})</h4>
+                  <div className="max-h-40 overflow-y-auto rounded border bg-muted p-2 text-xs space-y-1">
+                    {importResult.errors.slice(0, 50).map((e, i) => <div key={i}>{e}</div>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
