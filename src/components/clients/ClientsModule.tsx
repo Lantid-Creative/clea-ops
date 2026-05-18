@@ -495,6 +495,35 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Import Result Dialog */}
+      <Dialog open={!!importResult} onOpenChange={() => setImportResult(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import complete</DialogTitle>
+            <DialogDescription>
+              Customers matched by email are updated; new emails are added.
+            </DialogDescription>
+          </DialogHeader>
+          {importResult && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg border p-2"><div className="text-2xl font-semibold text-success">{importResult.created}</div><div className="text-xs text-muted-foreground">Added</div></div>
+                <div className="rounded-lg border p-2"><div className="text-2xl font-semibold text-primary">{importResult.updated}</div><div className="text-xs text-muted-foreground">Updated</div></div>
+                <div className="rounded-lg border p-2"><div className="text-2xl font-semibold text-muted-foreground">{importResult.skipped}</div><div className="text-xs text-muted-foreground">Duplicates</div></div>
+              </div>
+              {importResult.errors.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-1">Errors ({importResult.errors.length})</h4>
+                  <div className="max-h-40 overflow-y-auto rounded border bg-muted p-2 text-xs space-y-1">
+                    {importResult.errors.slice(0, 50).map((e, i) => <div key={i}>{e}</div>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
