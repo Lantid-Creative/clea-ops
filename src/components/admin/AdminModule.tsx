@@ -39,7 +39,62 @@ export function AdminModule() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState<AppRole>('staff');
+  const [newDept, setNewDept] = useState<AppDepartment | 'none'>('none');
+  const [lastCreated, setLastCreated] = useState<{ email: string; password: string } | null>(null);
   const { toast } = useToast();
+
+  const generatePassword = (len = 14) => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    const arr = new Uint32Array(len);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, (n) => chars[n % chars.length]).join('');
+  };
+
+  const handleCreate = async () => {
+    const email = newEmail.trim().toLowerCase();
+    if (!email.endsWith('@tryclea.com')) {
+      toast({ title: 'Invalid email', description: 'Only @tryclea.com emails are allowed.', variant: 'destructive' });
+      return;
+    }
+    const password = newPassword.trim() || generatePassword(14);
+    setCreating(true);
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: {
+        users: [{
+          email,
+          password,
+          full_name: newName.trim() || email.split('@')[0],
+          role: newRole,
+          department: newDept === 'none' ? null : newDept,
+        }],
+      },
+    });
+    setCreating(false);
+    const result = (data as any)?.results?.[0];
+    if (error || !result || result.status !== 'created') {
+      toast({
+        title: 'Create failed',
+        description: error?.message || result?.error || 'Unknown error',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setLastCreated({ email: result.email, password: result.password });
+    setNewEmail(''); setNewName(''); setNewPassword(''); setNewRole('staff'); setNewDept('none');
+    load();
+  };
+
+  const copyCreds = () => {
+    if (!lastCreated) return;
+    navigator.clipboard.writeText(`${lastCreated.email} / ${lastCreated.password}`);
+    toast({ title: 'Copied', description: 'Credentials copied to clipboard.' });
+  };
 
   const load = async () => {
     setLoading(true);
