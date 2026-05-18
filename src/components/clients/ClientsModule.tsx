@@ -87,6 +87,16 @@ function rowToClient(r: any): Client {
     transaction_volume: Number(r.transaction_volume ?? 0),
     onboard_date: r.onboard_date,
     created_at: r.created_at,
+    user_type: r.user_type ?? '',
+    first_name: r.first_name ?? '',
+    last_name: r.last_name ?? '',
+    registration_date: r.registration_date ?? null,
+    onboarding_status: r.onboarding_status ?? '',
+    engagement_status: r.engagement_status ?? '',
+    last_contact_date: r.last_contact_date ?? null,
+    follow_up_required: !!r.follow_up_required,
+    assigned_agent: r.assigned_agent ?? '',
+    notes: r.notes ?? '',
   };
 }
 
