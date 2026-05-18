@@ -284,6 +284,76 @@ export function AdminModule() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create new user</DialogTitle>
+          </DialogHeader>
+          {lastCreated ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">User created. Share these credentials securely — the password will not be shown again.</p>
+              <div className="rounded-md border p-3 space-y-1 font-mono text-sm">
+                <div><span className="text-muted-foreground">Email:</span> {lastCreated.email}</div>
+                <div><span className="text-muted-foreground">Password:</span> {lastCreated.password}</div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={copyCreds}><Copy className="h-4 w-4 mr-1" />Copy</Button>
+                <Button size="sm" onClick={() => setLastCreated(null)}>Create another</Button>
+                <Button size="sm" variant="ghost" onClick={() => setCreateOpen(false)}>Done</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <Label>Email (@tryclea.com)</Label>
+                <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="name@tryclea.com" />
+              </div>
+              <div>
+                <Label>Full name</Label>
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Optional" />
+              </div>
+              <div>
+                <Label>Password</Label>
+                <div className="flex gap-2">
+                  <Input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => setNewPassword(generatePassword(14))} title="Generate">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Role</Label>
+                  <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Department</Label>
+                  <Select value={newDept} onValueChange={(v) => setNewDept(v as AppDepartment | 'none')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— None —</SelectItem>
+                      {DEPARTMENTS.map((d) => <SelectItem key={d} value={d} className="capitalize">{d.replace('_', ' ')}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreate} disabled={creating || !newEmail}>
+                  {creating && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                  Create user
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
