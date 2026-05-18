@@ -100,6 +100,111 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
+  const [onboardingFilter, setOnboardingFilter] = useState<string>('All');
+  const [engagementFilter, setEngagementFilter] = useState<string>('All');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; errors: string[] } | null>(null);
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw: any[] = XLSX.utils.sheet_to_json(ws, { defval: '', raw: true });
+
+      const rows: ImportRow[] = [];
+      const errors: string[] = [];
+      raw.forEach((r, idx) => {
+        const mapped: any = {};
+        Object.keys(r).forEach((k) => {
+          const key = HEADER_MAP[String(k).trim().toLowerCase()];
+          if (key) mapped[key] = r[k];
+        });
+        const email = String(mapped.email ?? '').trim().toLowerCase();
+        if (!email) { errors.push(`Row ${idx + 2}: missing email`); return; }
+        rows.push({
+          user_type: String(mapped.user_type ?? '').trim(),
+          first_name: String(mapped.first_name ?? '').trim(),
+          last_name: String(mapped.last_name ?? '').trim(),
+          email,
+          phone: mapped.phone == null ? '' : String(mapped.phone).trim(),
+          registration_date: parseDate(mapped.registration_date),
+          onboarding_status: String(mapped.onboarding_status ?? '').trim(),
+          engagement_status: String(mapped.engagement_status ?? '').trim(),
+          last_contact_date: parseDate(mapped.last_contact_date),
+          follow_up_required: parseBool(mapped.follow_up_required),
+          assigned_agent: String(mapped.assigned_agent ?? '').trim(),
+          notes: String(mapped.notes ?? '').trim(),
+        });
+      });
+
+      const uniq = new Map<string, ImportRow>();
+      rows.forEach((r) => uniq.set(r.email, r));
+      const emails = Array.from(uniq.keys());
+
+      const { data: existing, error: fetchErr } = await supabase
+        .from('clients').select('id,email').in('email', emails);
+      if (fetchErr) throw fetchErr;
+      const byEmail = new Map<string, string>();
+      (existing ?? []).forEach((c: any) => byEmail.set(String(c.email).toLowerCase(), c.id));
+
+      const { data: { user } } = await supabase.auth.getUser();
+      let created = 0, updated = 0;
+
+      for (const r of uniq.values()) {
+        const fullName = `${r.first_name} ${r.last_name}`.trim();
+        const payload: any = {
+          email: r.email,
+          contact_person: fullName,
+          company_name: fullName || r.email,
+          phone: r.phone,
+          user_type: r.user_type,
+          first_name: r.first_name,
+          last_name: r.last_name,
+          registration_date: r.registration_date,
+          onboarding_status: r.onboarding_status,
+          engagement_status: r.engagement_status,
+          last_contact_date: r.last_contact_date,
+          follow_up_required: r.follow_up_required,
+          assigned_agent: r.assigned_agent,
+          notes: r.notes,
+        };
+        const existingId = byEmail.get(r.email);
+        if (existingId) {
+          const { error } = await supabase.from('clients').update(payload).eq('id', existingId);
+          if (error) errors.push(`${r.email}: ${error.message}`);
+          else updated++;
+        } else {
+          const kyc = Object.fromEntries(KYC_DOCUMENTS.map((d) => [d, false]));
+          const { error } = await supabase.from('clients').insert({
+            ...payload,
+            stage: 'Lead',
+            kyc_documents: kyc,
+            transaction_volume: 0,
+            created_by: user?.id ?? null,
+          });
+          if (error) errors.push(`${r.email}: ${error.message}`);
+          else created++;
+        }
+      }
+
+      setImportResult({ created, updated, skipped: rows.length - uniq.size, errors });
+      toast.success(`Imported ${created} new, updated ${updated}`);
+      load();
+    } catch (err: any) {
+      toast.error(err.message ?? 'Import failed');
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
