@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil, Upload, AlertCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatCard } from '@/components/layout/StatCard';
@@ -10,6 +11,52 @@ import { Client, ClientStage, CLIENT_STAGES, KYC_DOCUMENTS } from '@/lib/types';
 import { formatCurrency, formatNumber } from '@/lib/helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+type ImportRow = {
+  user_type: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  registration_date: string | null;
+  onboarding_status: string;
+  engagement_status: string;
+  last_contact_date: string | null;
+  follow_up_required: boolean;
+  assigned_agent: string;
+  notes: string;
+};
+
+const HEADER_MAP: Record<string, keyof ImportRow> = {
+  'user type': 'user_type',
+  'first name': 'first_name',
+  'last name': 'last_name',
+  'email': 'email',
+  'phone number': 'phone',
+  'phone': 'phone',
+  'registration date': 'registration_date',
+  'onboarding status': 'onboarding_status',
+  'engagement status': 'engagement_status',
+  'last contact date': 'last_contact_date',
+  'follow-up required': 'follow_up_required',
+  'follow up required': 'follow_up_required',
+  'assigned agent': 'assigned_agent',
+  'notes': 'notes',
+};
+
+function parseDate(v: any): string | null {
+  if (v == null || v === '') return null;
+  if (v instanceof Date) return v.toISOString();
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function parseBool(v: any): boolean {
+  if (typeof v === 'boolean') return v;
+  if (v == null) return false;
+  const s = String(v).toLowerCase().trim();
+  return s === 'true' || s === 'yes' || s === '1' || s === 'y';
+}
 
 type ClientFormData = {
   company_name: string;
