@@ -186,12 +186,17 @@ export function AdminModule() {
         </TabsList>
 
         <TabsContent value="members" className="space-y-4">
-          <Input
-            placeholder="Search by name…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search by name…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            <Button onClick={() => { setLastCreated(null); setCreateOpen(true); }} className="ml-auto">
+              <Plus className="h-4 w-4 mr-1" /> New user
+            </Button>
+          </div>
 
           <Card className="overflow-hidden">
             <div className="grid grid-cols-12 gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
