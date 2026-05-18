@@ -332,15 +332,39 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by company or contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Search by name, contact, or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        {onboardingOptions.length > 0 && (
+          <Select value={onboardingFilter} onValueChange={setOnboardingFilter}>
+            <SelectTrigger className="w-[170px] shrink-0"><SelectValue placeholder="Onboarding" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All onboarding</SelectItem>
+              {onboardingOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        {engagementOptions.length > 0 && (
+          <Select value={engagementFilter} onValueChange={setEngagementFilter}>
+            <SelectTrigger className="w-[170px] shrink-0"><SelectValue placeholder="Engagement" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All engagement</SelectItem>
+              {engagementOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         <Button variant={showArchived ? 'default' : 'outline'} onClick={() => setShowArchived((v) => !v)} className="shrink-0">
           <Archive className="mr-1 h-4 w-4" /> {showArchived ? 'Showing archived' : 'Show archived'}
         </Button>
         {canEdit && !showArchived && (
-          <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="shrink-0">
-            <Plus className="mr-1 h-4 w-4" /> Add Client
-          </Button>
+          <>
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileSelected} />
+            <Button variant="outline" onClick={handleImportClick} disabled={importing} className="shrink-0">
+              <Upload className="mr-1 h-4 w-4" /> {importing ? 'Importing...' : 'Bulk import'}
+            </Button>
+            <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="shrink-0">
+              <Plus className="mr-1 h-4 w-4" /> Add Client
+            </Button>
+          </>
         )}
       </div>
 
