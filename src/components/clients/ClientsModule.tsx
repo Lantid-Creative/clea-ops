@@ -238,11 +238,16 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
 
   const visible = clients.filter((c) => showArchived ? archivedSet[c.id] : !archivedSet[c.id]);
 
+  const onboardingOptions = Array.from(new Set(visible.map((c) => c.onboarding_status).filter(Boolean))) as string[];
+  const engagementOptions = Array.from(new Set(visible.map((c) => c.engagement_status).filter(Boolean))) as string[];
+
   const filtered = visible.filter((c) => {
     const q = search.toLowerCase();
-    const matchSearch = !q || c.company_name.toLowerCase().includes(q) || c.contact_person.toLowerCase().includes(q);
+    const matchSearch = !q || c.company_name.toLowerCase().includes(q) || c.contact_person.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
     const matchStage = stageFilter === 'All' || c.stage === stageFilter;
-    return matchSearch && matchStage;
+    const matchOnboarding = onboardingFilter === 'All' || c.onboarding_status === onboardingFilter;
+    const matchEngagement = engagementFilter === 'All' || c.engagement_status === engagementFilter;
+    return matchSearch && matchStage && matchOnboarding && matchEngagement;
   });
 
   const stageCounts = CLIENT_STAGES.reduce((acc, s) => {
