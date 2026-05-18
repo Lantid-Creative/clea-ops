@@ -9,7 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { AppRole, AppDepartment } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Copy, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 type Member = {
   user_id: string;
@@ -37,7 +39,62 @@ export function AdminModule() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState<AppRole>('staff');
+  const [newDept, setNewDept] = useState<AppDepartment | 'none'>('none');
+  const [lastCreated, setLastCreated] = useState<{ email: string; password: string } | null>(null);
   const { toast } = useToast();
+
+  const generatePassword = (len = 14) => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    const arr = new Uint32Array(len);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, (n) => chars[n % chars.length]).join('');
+  };
+
+  const handleCreate = async () => {
+    const email = newEmail.trim().toLowerCase();
+    if (!email.endsWith('@tryclea.com')) {
+      toast({ title: 'Invalid email', description: 'Only @tryclea.com emails are allowed.', variant: 'destructive' });
+      return;
+    }
+    const password = newPassword.trim() || generatePassword(14);
+    setCreating(true);
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: {
+        users: [{
+          email,
+          password,
+          full_name: newName.trim() || email.split('@')[0],
+          role: newRole,
+          department: newDept === 'none' ? null : newDept,
+        }],
+      },
+    });
+    setCreating(false);
+    const result = (data as any)?.results?.[0];
+    if (error || !result || result.status !== 'created') {
+      toast({
+        title: 'Create failed',
+        description: error?.message || result?.error || 'Unknown error',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setLastCreated({ email: result.email, password: result.password });
+    setNewEmail(''); setNewName(''); setNewPassword(''); setNewRole('staff'); setNewDept('none');
+    load();
+  };
+
+  const copyCreds = () => {
+    if (!lastCreated) return;
+    navigator.clipboard.writeText(`${lastCreated.email} / ${lastCreated.password}`);
+    toast({ title: 'Copied', description: 'Credentials copied to clipboard.' });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -129,12 +186,17 @@ export function AdminModule() {
         </TabsList>
 
         <TabsContent value="members" className="space-y-4">
-          <Input
-            placeholder="Search by name…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search by name…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            <Button onClick={() => { setLastCreated(null); setCreateOpen(true); }} className="ml-auto">
+              <Plus className="h-4 w-4 mr-1" /> New user
+            </Button>
+          </div>
 
           <Card className="overflow-hidden">
             <div className="grid grid-cols-12 gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
@@ -222,6 +284,76 @@ export function AdminModule() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create new user</DialogTitle>
+          </DialogHeader>
+          {lastCreated ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">User created. Share these credentials securely — the password will not be shown again.</p>
+              <div className="rounded-md border p-3 space-y-1 font-mono text-sm">
+                <div><span className="text-muted-foreground">Email:</span> {lastCreated.email}</div>
+                <div><span className="text-muted-foreground">Password:</span> {lastCreated.password}</div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={copyCreds}><Copy className="h-4 w-4 mr-1" />Copy</Button>
+                <Button size="sm" onClick={() => setLastCreated(null)}>Create another</Button>
+                <Button size="sm" variant="ghost" onClick={() => setCreateOpen(false)}>Done</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <Label>Email (@tryclea.com)</Label>
+                <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="name@tryclea.com" />
+              </div>
+              <div>
+                <Label>Full name</Label>
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Optional" />
+              </div>
+              <div>
+                <Label>Password</Label>
+                <div className="flex gap-2">
+                  <Input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => setNewPassword(generatePassword(14))} title="Generate">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Role</Label>
+                  <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Department</Label>
+                  <Select value={newDept} onValueChange={(v) => setNewDept(v as AppDepartment | 'none')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— None —</SelectItem>
+                      {DEPARTMENTS.map((d) => <SelectItem key={d} value={d} className="capitalize">{d.replace('_', ' ')}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreate} disabled={creating || !newEmail}>
+                  {creating && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                  Create user
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
