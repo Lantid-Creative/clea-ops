@@ -212,9 +212,12 @@ export function AdminModule() {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold">Team Administration</h2>
-        <p className="text-sm text-muted-foreground">Assign roles and departments, deactivate access, review changes.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Team Administration</h2>
+          <p className="text-sm text-muted-foreground">Assign roles and departments, deactivate access, review changes.</p>
+        </div>
+        <HowToGuide module="admin" />
       </div>
 
       <Tabs defaultValue="members">
