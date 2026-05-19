@@ -23,7 +23,7 @@ const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 ];
 
 const tabLabels: Record<Tab, string> = {
-  clients: 'Client Onboarding & Compliance',
+  clients: 'Customer Onboarding & Compliance',
   tickets: 'Tickets & Support',
   sales: 'Sales Pipeline & Commission',
   kpis: 'KPI Dashboard',
