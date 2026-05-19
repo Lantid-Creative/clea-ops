@@ -10,6 +10,7 @@ import { Employee, Department, EmploymentType, DEPARTMENTS, DEPT_COLORS } from '
 import { formatNumber } from '@/lib/helpers';
 import { mockEmployees } from '@/lib/mock-data';
 import { toast } from 'sonner';
+import { LeaveRequests, OnboardingChecklists } from './HrExtras';
 
 export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
@@ -17,6 +18,7 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
   const [deptFilter, setDeptFilter] = useState<Department | 'All'>('All');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [view, setView] = useState<'employees' | 'leave' | 'onboarding'>('employees');
 
   const filtered = employees.filter((e) => {
     const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.role.toLowerCase().includes(search.toLowerCase());
