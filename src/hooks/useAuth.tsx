@@ -119,11 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (tab === 'admin') return role === 'admin';
     if (role === 'admin') return true;
     if (role === 'manager') {
-      // Managers can edit only their own department's tab
       if (!department) return false;
-      return DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+      const allowed = DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+      const readOnly = READ_ONLY_OVERRIDES[department]?.includes(tab) ?? false;
+      return allowed && !readOnly;
     }
-    // Staff: read-only
     return false;
   };
 
