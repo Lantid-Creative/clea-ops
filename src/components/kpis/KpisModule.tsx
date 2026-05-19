@@ -49,6 +49,9 @@ export function KpisModule() {
 
   return (
     <div className="p-4 space-y-6">
+      <div className="flex justify-end">
+        <HowToGuide module="kpis" />
+      </div>
       <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-5">
         <div className="flex items-center gap-2 mb-2">
           <Target className="h-5 w-5 text-primary" />
