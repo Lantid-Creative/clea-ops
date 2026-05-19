@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { AppRole, AppDepartment } from '@/hooks/useAuth';
-import { Loader2, Plus, Copy, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, Copy, RefreshCw, KeyRound } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
