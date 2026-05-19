@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { StatCard } from '@/components/layout/StatCard';
 import { Deal, DealStage, DEAL_STAGES } from '@/lib/types';
 import { formatCurrency } from '@/lib/helpers';
