@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { StatCard } from '@/components/layout/StatCard';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import { Deal, DealStage, DEAL_STAGES } from '@/lib/types';
 import { formatCurrency } from '@/lib/helpers';
 import { mockDeals, mockEmployees, defaultSalesSettings } from '@/lib/mock-data';
