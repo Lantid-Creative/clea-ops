@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS clients_email_unique ON public.clients (email) WHERE email <> '';
