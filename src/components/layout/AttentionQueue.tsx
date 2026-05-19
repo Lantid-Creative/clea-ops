@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth, AppDepartment } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-type QueueItem = { id: string; title: string; subtitle?: string; action?: { label: string; icon: any; run: () => Promise<void> } };
+type QueueItem = { id: string; title: string; subtitle?: string; action?: { label: string; icon: any; run: () => Promise<unknown> } };
 type QueueConfig = {
   label: string;
   description: string;
