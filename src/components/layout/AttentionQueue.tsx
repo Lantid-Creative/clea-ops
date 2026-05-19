@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check, Phone, FileCheck, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, AppDepartment } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
-type QueueItem = { id: string; title: string; subtitle?: string };
+type QueueItem = { id: string; title: string; subtitle?: string; action?: { label: string; icon: any; run: () => Promise<void> } };
 type QueueConfig = {
   label: string;
   description: string;
@@ -11,15 +12,33 @@ type QueueConfig = {
   fetch: () => Promise<QueueItem[]>;
 };
 
-const queueFor = (dept: AppDepartment | null, role: string | null): QueueConfig | null => {
-  // Admins/managers see no single fixed queue (they roam all modules)
+const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () => void): QueueConfig | null => {
   if (!dept) return null;
+
+  const markContacted = async (id: string) => {
+    const { error } = await supabase
+      .from('clients')
+      .update({ last_contact_date: new Date().toISOString(), follow_up_required: false })
+      .eq('id', id);
+    if (error) return toast.error(error.message);
+    toast.success('Marked as contacted');
+    refresh();
+  };
+
+  const advanceStage = async (id: string, stage: string, successMsg: string) => {
+    const patch: any = { stage };
+    if (stage === 'Onboarded') patch.onboard_date = new Date().toISOString().slice(0, 10);
+    const { error } = await supabase.from('clients').update(patch).eq('id', id);
+    if (error) return toast.error(error.message);
+    toast.success(successMsg);
+    refresh();
+  };
 
   switch (dept) {
     case 'compliance':
       return {
         label: 'Pending KYC reviews',
-        description: 'Clients waiting for compliance to review their documents.',
+        description: 'Customers waiting for compliance to review their documents.',
         targetTab: 'clients',
         fetch: async () => {
           const { data } = await supabase
@@ -29,13 +48,20 @@ const queueFor = (dept: AppDepartment | null, role: string | null): QueueConfig 
             .eq('archived', false)
             .order('created_at', { ascending: true })
             .limit(5);
-          return (data ?? []).map((c) => ({ id: c.id, title: c.company_name, subtitle: c.stage }));
+          return (data ?? []).map((c) => ({
+            id: c.id,
+            title: c.company_name,
+            subtitle: c.stage,
+            action: c.stage === 'KYC Submitted'
+              ? { label: 'Start review', icon: FileCheck, run: () => advanceStage(c.id, 'KYC Review', 'Moved to KYC Review') }
+              : { label: 'Approve KYC', icon: Check, run: () => advanceStage(c.id, 'Verified', 'KYC verified') },
+          }));
         },
       };
     case 'onboarding':
       return {
         label: 'Verified — ready to onboard',
-        description: 'Clients passed compliance and are waiting for onboarding.',
+        description: 'Customers passed compliance and are waiting for onboarding.',
         targetTab: 'clients',
         fetch: async () => {
           const { data } = await supabase
@@ -45,7 +71,12 @@ const queueFor = (dept: AppDepartment | null, role: string | null): QueueConfig 
             .eq('archived', false)
             .order('created_at', { ascending: true })
             .limit(5);
-          return (data ?? []).map((c) => ({ id: c.id, title: c.company_name, subtitle: c.country }));
+          return (data ?? []).map((c) => ({
+            id: c.id,
+            title: c.company_name,
+            subtitle: c.country,
+            action: { label: 'Mark onboarded', icon: UserPlus, run: () => advanceStage(c.id, 'Onboarded', 'Customer onboarded') },
+          }));
         },
       };
     case 'sales':
@@ -61,7 +92,12 @@ const queueFor = (dept: AppDepartment | null, role: string | null): QueueConfig 
             .eq('archived', false)
             .order('created_at', { ascending: true })
             .limit(5);
-          return (data ?? []).map((c) => ({ id: c.id, title: c.company_name, subtitle: new Date(c.created_at).toLocaleDateString() }));
+          return (data ?? []).map((c) => ({
+            id: c.id,
+            title: c.company_name,
+            subtitle: new Date(c.created_at).toLocaleDateString(),
+            action: { label: 'Mark contacted', icon: Phone, run: () => markContacted(c.id) },
+          }));
         },
       };
     case 'customer_success':
@@ -82,6 +118,7 @@ const queueFor = (dept: AppDepartment | null, role: string | null): QueueConfig 
             id: c.id,
             title: c.company_name,
             subtitle: c.last_contact_date ? `Last: ${new Date(c.last_contact_date).toLocaleDateString()}` : 'Never contacted',
+            action: { label: 'Mark contacted', icon: Phone, run: () => markContacted(c.id) },
           }));
         },
       };
@@ -140,8 +177,8 @@ const adminQueue = (): QueueConfig => ({
       supabase.from('tickets').select('id', { count: 'exact', head: true }).not('due_date', 'is', null).lt('due_date', new Date().toISOString()).not('status', 'in', '(resolved,closed)').eq('archived', false),
     ]);
 
-    if ((kyc.count ?? 0) > 0) items.push({ id: 'kyc', title: `${kyc.count} clients pending KYC review`, subtitle: 'Compliance' });
-    if ((verified.count ?? 0) > 0) items.push({ id: 'ver', title: `${verified.count} verified clients stuck >14 days`, subtitle: 'Onboarding' });
+    if ((kyc.count ?? 0) > 0) items.push({ id: 'kyc', title: `${kyc.count} customers pending KYC review`, subtitle: 'Compliance' });
+    if ((verified.count ?? 0) > 0) items.push({ id: 'ver', title: `${verified.count} verified customers stuck >14 days`, subtitle: 'Onboarding' });
     if ((churn.count ?? 0) > 0) items.push({ id: 'churn', title: `${churn.count} active customers at churn risk`, subtitle: 'Customer Success' });
     if ((sla.count ?? 0) > 0) items.push({ id: 'sla', title: `${sla.count} tickets past SLA`, subtitle: 'Support' });
     return items;
@@ -152,7 +189,9 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
   const { department, role } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const config = role === 'admin' ? adminQueue() : queueFor(department, role);
+  const [tick, setTick] = useState(0);
+  const refresh = () => setTick((t) => t + 1);
+  const config = role === 'admin' ? adminQueue() : queueFor(department, role, refresh);
 
   useEffect(() => {
     if (!config) { setLoading(false); return; }
@@ -161,7 +200,7 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
       if (!cancelled) { setItems(r); setLoading(false); }
     });
     return () => { cancelled = true; };
-  }, [department, role]);
+  }, [department, role, tick]);
 
   if (!config) return null;
   if (loading) return <div className="mx-4 mt-4 h-24 rounded-xl border bg-card animate-pulse" />;
@@ -187,12 +226,26 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
         )}
       </div>
       <ul className="divide-y">
-        {items.map((it) => (
-          <li key={it.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
-            <span className="font-medium truncate">{it.title}</span>
-            {it.subtitle && <span className="text-xs text-muted-foreground ml-3 shrink-0">{it.subtitle}</span>}
-          </li>
-        ))}
+        {items.map((it) => {
+          const Icon = it.action?.icon;
+          return (
+            <li key={it.id} className="px-4 py-2.5 flex items-center justify-between text-sm gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{it.title}</p>
+                {it.subtitle && <p className="text-xs text-muted-foreground">{it.subtitle}</p>}
+              </div>
+              {it.action && (
+                <button
+                  onClick={it.action.run}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                >
+                  {Icon && <Icon className="h-3 w-3" />}
+                  {it.action.label}
+                </button>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
