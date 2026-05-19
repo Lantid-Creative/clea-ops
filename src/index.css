@@ -54,13 +54,13 @@
     --dept-design: 330 81% 60%;
     --dept-operations: 199 89% 48%;
 
-    --sidebar-background: 215 25% 13%;
-    --sidebar-foreground: 210 20% 98%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 27%;
     --sidebar-primary: 221 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 20%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 215 25% 20%;
+    --sidebar-accent: 221 100% 96%;
+    --sidebar-accent-foreground: 221 100% 40%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 221 100% 50%;
   }
 
