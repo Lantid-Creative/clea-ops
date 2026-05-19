@@ -161,7 +161,7 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
       if (!cancelled) { setItems(r); setLoading(false); }
     });
     return () => { cancelled = true; };
-  }, [department]);
+  }, [department, role]);
 
   if (!config) return null;
   if (loading) return <div className="mx-4 mt-4 h-24 rounded-xl border bg-card animate-pulse" />;
