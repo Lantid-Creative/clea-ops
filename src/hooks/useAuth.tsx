@@ -118,13 +118,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!role) return false;
     if (tab === 'admin') return role === 'admin';
     if (role === 'admin') return true;
+    // Managers and staff can edit tabs mapped to their own department,
+    // except where a read-only override applies (e.g. Compliance → Clients).
+    if (!department) return false;
+    const allowed = DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+    const readOnly = READ_ONLY_OVERRIDES[department]?.includes(tab) ?? false;
     if (role === 'manager') {
-      if (!department) return false;
-      const allowed = DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
-      const readOnly = READ_ONLY_OVERRIDES[department]?.includes(tab) ?? false;
+      // Managers also see other departments' tabs (read-only).
       return allowed && !readOnly;
     }
-    return false;
+    // Staff: only edit their own department's tabs (and not read-only overrides).
+    return allowed && !readOnly;
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
