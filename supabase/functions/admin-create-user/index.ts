@@ -53,7 +53,10 @@ Deno.serve(async (req) => {
         });
       }
       const newPassword = genPassword(14);
-      const { error: updErr } = await admin.auth.admin.updateUserById(targetId, { password: newPassword });
+      const { error: updErr } = await admin.auth.admin.updateUserById(targetId, {
+        password: newPassword,
+        user_metadata: { ...(target.user.user_metadata ?? {}), must_change_password: true },
+      });
       if (updErr) {
         return new Response(JSON.stringify({ error: updErr.message }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
