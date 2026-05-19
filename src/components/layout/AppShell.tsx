@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProfileDialog } from '@/components/profile/ProfileDialog';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
