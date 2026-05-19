@@ -18,11 +18,13 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [showAddForm, setShowAddForm] = useState(false);
   const [settings] = useState(defaultSalesSettings);
+  const [reasonPrompt, setReasonPrompt] = useState<{ deal: Deal; newStage: DealStage } | null>(null);
+  const [reasonText, setReasonText] = useState('');
 
   const totalPipeline = deals.filter((d) => d.stage !== 'Lost').reduce((s, d) => s + d.deal_value, 0);
   const wonValue = deals.filter((d) => d.stage === 'Won').reduce((s, d) => s + d.deal_value, 0);
   const avgDeal = deals.length > 0 ? totalPipeline / deals.filter((d) => d.stage !== 'Lost').length : 0;
-  const winRate = deals.length > 0 ? Math.round((deals.filter((d) => d.stage === 'Won').length / deals.filter(d => d.stage === 'Won' || d.stage === 'Lost').length) * 100) : 0;
+  const winRate = deals.length > 0 ? Math.round((deals.filter((d) => d.stage === 'Won').length / Math.max(1, deals.filter(d => d.stage === 'Won' || d.stage === 'Lost').length)) * 100) : 0;
 
   const handleAdd = (data: Partial<Deal>) => {
     const newDeal: Deal = {
@@ -43,8 +45,23 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
   };
 
   const changeStage = (dealId: string, newStage: DealStage) => {
+    const deal = deals.find((d) => d.id === dealId);
+    if (!deal) return;
+    if (newStage === 'Won' || newStage === 'Lost') {
+      setReasonPrompt({ deal, newStage });
+      setReasonText('');
+      return;
+    }
     setDeals(deals.map((d) => d.id === dealId ? { ...d, stage: newStage } : d));
     toast.success(`Deal moved to ${newStage}`);
+  };
+
+  const confirmReason = () => {
+    if (!reasonPrompt) return;
+    const { deal, newStage } = reasonPrompt;
+    setDeals(deals.map((d) => d.id === deal.id ? { ...d, stage: newStage, won_lost_reason: reasonText } : d));
+    toast.success(`Deal marked ${newStage}${reasonText ? ` · ${reasonText}` : ''}`);
+    setReasonPrompt(null);
   };
 
   // Team performance data
