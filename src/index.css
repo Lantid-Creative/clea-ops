@@ -34,7 +34,10 @@
     --input: 214 32% 91%;
     --ring: 221 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1.25rem;
+
+    --brand-blue: 221 100% 50%;
+    --brand-blue-soft: 221 100% 96%;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
@@ -51,13 +54,13 @@
     --dept-design: 330 81% 60%;
     --dept-operations: 199 89% 48%;
 
-    --sidebar-background: 215 25% 13%;
-    --sidebar-foreground: 210 20% 98%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 27%;
     --sidebar-primary: 221 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 20%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 215 25% 20%;
+    --sidebar-accent: 221 100% 96%;
+    --sidebar-accent-foreground: 221 100% 40%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 221 100% 50%;
   }
 
@@ -105,7 +108,18 @@
 
 @layer utilities {
   .stat-card {
-    @apply bg-card rounded-xl border p-4 shadow-sm transition-shadow hover:shadow-md;
+    @apply bg-card rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .brand-gradient {
+    background: linear-gradient(135deg, hsl(221 100% 50%) 0%, hsl(221 100% 45%) 100%);
+  }
+
+  .brand-radial {
+    background:
+      radial-gradient(ellipse at top left, hsl(221 100% 55% / 0.95), transparent 60%),
+      radial-gradient(ellipse at bottom right, hsl(221 100% 45% / 0.9), transparent 55%),
+      hsl(221 100% 50%);
   }
 
   .pipeline-btn {
