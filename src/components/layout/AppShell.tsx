@@ -104,19 +104,19 @@ export function AppShell({ activeTab, onTabChange, children, onLogout, userRole,
       <div className="flex min-h-screen w-full bg-gradient-to-br from-[hsl(221,100%,97%)] via-background to-[hsl(221,100%,95%)]">
         <AppSidebarNav tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
 
-        <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur px-5">
-            <div className="flex items-center gap-3">
+        <div className="flex flex-1 flex-col min-w-0">
+          <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b border-border/60 bg-card/80 backdrop-blur px-3 sm:px-5">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <SidebarTrigger />
-              <img src={cleaLogo} alt="Clea" className="h-8 w-auto object-contain" />
-              <div>
-                <h1 className="text-base font-bold leading-none tracking-tight">Ops</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block mt-0.5">{tabLabels[activeTab]}</p>
+              <img src={cleaLogo} alt="Clea" className="h-7 w-auto sm:h-8 object-contain shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base font-bold leading-none tracking-tight">Ops</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block mt-0.5 truncate">{tabLabels[activeTab]}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {userRole && (
-                <span className="text-xs font-medium text-muted-foreground capitalize hidden sm:inline px-2.5 py-1 rounded-full bg-secondary">{userRole}</span>
+                <span className="text-xs font-medium text-muted-foreground capitalize hidden md:inline px-2.5 py-1 rounded-full bg-secondary">{userRole}</span>
               )}
               <Button variant="ghost" size="icon" onClick={onLogout} className="h-9 w-9 rounded-full">
                 <LogOut className="h-4 w-4" />
