@@ -34,7 +34,10 @@
     --input: 214 32% 91%;
     --ring: 221 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1.25rem;
+
+    --brand-blue: 221 100% 50%;
+    --brand-blue-soft: 221 100% 96%;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
