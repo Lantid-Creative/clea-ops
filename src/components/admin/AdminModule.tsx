@@ -318,24 +318,28 @@ export function AdminModule() {
 
         <TabsContent value="audit">
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-12 gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
-              <div className="col-span-3">When</div>
-              <div className="col-span-3">Actor</div>
-              <div className="col-span-3">Target</div>
-              <div className="col-span-3">Change</div>
-            </div>
-            {audit.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No activity yet.</div>
-            ) : (
-              audit.map((a) => (
-                <div key={a.id} className="grid grid-cols-12 gap-3 border-b px-4 py-2 text-sm last:border-b-0">
-                  <div className="col-span-3 text-muted-foreground">{new Date(a.created_at).toLocaleString()}</div>
-                  <div className="col-span-3">{memberName(a.actor_id)}</div>
-                  <div className="col-span-3">{memberName(a.target_user_id)}</div>
-                  <div className="col-span-3">{formatAction(a)}</div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[720px]">
+                <div className="grid grid-cols-12 gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
+                  <div className="col-span-3">When</div>
+                  <div className="col-span-3">Actor</div>
+                  <div className="col-span-3">Target</div>
+                  <div className="col-span-3">Change</div>
                 </div>
-              ))
-            )}
+                {audit.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">No activity yet.</div>
+                ) : (
+                  audit.map((a) => (
+                    <div key={a.id} className="grid grid-cols-12 gap-3 border-b px-4 py-2 text-sm last:border-b-0">
+                      <div className="col-span-3 text-muted-foreground">{new Date(a.created_at).toLocaleString()}</div>
+                      <div className="col-span-3">{memberName(a.actor_id)}</div>
+                      <div className="col-span-3">{memberName(a.target_user_id)}</div>
+                      <div className="col-span-3">{formatAction(a)}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
