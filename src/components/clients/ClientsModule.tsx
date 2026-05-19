@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil, Upload, AlertCircle, MessageSquare, Trash2, User as UserIcon } from 'lucide-react';
+import { KycChecklist, StageSlaBadge } from './KycChecklist';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,6 +105,9 @@ function rowToClient(r: any): Client {
     transaction_volume: Number(r.transaction_volume ?? 0),
     onboard_date: r.onboard_date,
     created_at: r.created_at,
+    stage_entered_at: r.stage_entered_at,
+    won_lost_reason: r.won_lost_reason ?? '',
+    closed_at: r.closed_at ?? null,
     user_type: r.user_type ?? '',
     first_name: r.first_name ?? '',
     last_name: r.last_name ?? '',
@@ -591,22 +595,11 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
                 )}
 
                 <div>
-                  <h4 className="mb-2 font-semibold text-sm">KYC Document Checklist</h4>
-                  <div className="space-y-2">
-                    {KYC_DOCUMENTS.map((doc) => (
-                      <button
-                        key={doc}
-                        onClick={() => canEdit && toggleDoc(selectedClient, doc)}
-                        disabled={!canEdit}
-                        className="flex w-full items-center gap-2 rounded-lg border p-2.5 text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-70"
-                      >
-                        <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedClient.kyc_documents[doc] ? 'bg-success border-success text-success-foreground' : 'border-border'}`}>
-                          {selectedClient.kyc_documents[doc] && <Check className="h-3 w-3" />}
-                        </div>
-                        {doc}
-                      </button>
-                    ))}
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">KYC Document Checklist</h4>
+                    <StageSlaBadge stage={selectedClient.stage} stageEnteredAt={(selectedClient as any).stage_entered_at ?? null} />
                   </div>
+                  <KycChecklist clientId={selectedClient.id} canEdit={canEdit} />
                 </div>
 
                 {/* Team comments */}

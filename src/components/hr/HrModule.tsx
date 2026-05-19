@@ -10,6 +10,7 @@ import { Employee, Department, EmploymentType, DEPARTMENTS, DEPT_COLORS } from '
 import { formatNumber } from '@/lib/helpers';
 import { mockEmployees } from '@/lib/mock-data';
 import { toast } from 'sonner';
+import { LeaveRequests, OnboardingChecklists } from './HrExtras';
 
 export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
@@ -17,6 +18,7 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
   const [deptFilter, setDeptFilter] = useState<Department | 'All'>('All');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [view, setView] = useState<'employees' | 'leave' | 'onboarding'>('employees');
 
   const filtered = employees.filter((e) => {
     const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.role.toLowerCase().includes(search.toLowerCase());
@@ -66,7 +68,19 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
         <StatCard title="Contract" value={formatNumber(contract)} icon={<FileText className="h-5 w-5" />} />
       </div>
 
-      {/* Department Grid */}
+      {/* View toggle */}
+      <div className="flex rounded-lg border bg-card p-1 w-fit">
+        {(['employees','leave','onboarding'] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            {v === 'employees' ? 'Employees' : v === 'leave' ? 'Leave Requests' : 'Onboarding'}
+          </button>
+        ))}
+      </div>
+
+      {view === 'leave' && <LeaveRequests />}
+      {view === 'onboarding' && <OnboardingChecklists />}
+      {view === 'employees' && <>
+
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setDeptFilter('All')} className={`pipeline-btn ${deptFilter === 'All' ? 'pipeline-btn-active' : 'bg-card text-muted-foreground border-border hover:bg-accent'}`}>
           All ({employees.length})
@@ -111,6 +125,7 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
           </div>
         ))}
       </div>
+      </>}
 
       {/* Detail Modal */}
       <Dialog open={!!selectedEmployee} onOpenChange={() => setSelectedEmployee(null)}>

@@ -108,6 +108,7 @@ export type Database = {
           archived: boolean
           assigned_agent: string
           assigned_specialist: string
+          closed_at: string | null
           company_name: string
           contact_person: string
           country: string
@@ -128,14 +129,17 @@ export type Database = {
           phone: string
           registration_date: string | null
           stage: Database["public"]["Enums"]["client_stage"]
+          stage_entered_at: string
           transaction_volume: number
           updated_at: string
           user_type: string
+          won_lost_reason: string
         }
         Insert: {
           archived?: boolean
           assigned_agent?: string
           assigned_specialist?: string
+          closed_at?: string | null
           company_name: string
           contact_person?: string
           country?: string
@@ -156,14 +160,17 @@ export type Database = {
           phone?: string
           registration_date?: string | null
           stage?: Database["public"]["Enums"]["client_stage"]
+          stage_entered_at?: string
           transaction_volume?: number
           updated_at?: string
           user_type?: string
+          won_lost_reason?: string
         }
         Update: {
           archived?: boolean
           assigned_agent?: string
           assigned_specialist?: string
+          closed_at?: string | null
           company_name?: string
           contact_person?: string
           country?: string
@@ -184,9 +191,145 @@ export type Database = {
           phone?: string
           registration_date?: string | null
           stage?: Database["public"]["Enums"]["client_stage"]
+          stage_entered_at?: string
           transaction_volume?: number
           updated_at?: string
           user_type?: string
+          won_lost_reason?: string
+        }
+        Relationships: []
+      }
+      hr_onboarding_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          employee_name: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          employee_name?: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          employee_name?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      kyc_checklist_items: {
+        Row: {
+          client_id: string
+          created_at: string
+          doc_type: string
+          file_url: string | null
+          id: string
+          notes: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          doc_type: string
+          file_url?: string | null
+          id?: string
+          notes?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          doc_type?: string
+          file_url?: string | null
+          id?: string
+          notes?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_checklist_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          approver_id: string | null
+          approver_name: string
+          created_at: string
+          decided_at: string | null
+          decision_note: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string
+          requester_name: string
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approver_id?: string | null
+          approver_name?: string
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string
+          end_date: string
+          id?: string
+          leave_type?: string
+          reason?: string
+          requester_name?: string
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approver_id?: string | null
+          approver_name?: string
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string
+          requester_name?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -214,6 +357,54 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      project_tasks: {
+        Row: {
+          archived: boolean
+          assignee: string
+          assignee_id: string | null
+          column_name: string
+          created_at: string
+          created_by: string | null
+          description: string
+          due_date: string | null
+          id: string
+          labels: string[]
+          priority: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          assignee?: string
+          assignee_id?: string | null
+          column_name?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          labels?: string[]
+          priority?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          assignee?: string
+          assignee_id?: string | null
+          column_name?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          labels?: string[]
+          priority?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -403,7 +594,9 @@ export type Database = {
     }
     Functions: {
       can_edit_clients: { Args: { _user_id: string }; Returns: boolean }
+      can_edit_projects: { Args: { _user_id: string }; Returns: boolean }
       can_edit_tickets: { Args: { _user_id: string }; Returns: boolean }
+      can_manage_hr: { Args: { _user_id: string }; Returns: boolean }
       get_user_department: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_department"]

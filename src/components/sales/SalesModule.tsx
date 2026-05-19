@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { StatCard } from '@/components/layout/StatCard';
 import { Deal, DealStage, DEAL_STAGES } from '@/lib/types';
 import { formatCurrency } from '@/lib/helpers';
@@ -18,11 +19,13 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [showAddForm, setShowAddForm] = useState(false);
   const [settings] = useState(defaultSalesSettings);
+  const [reasonPrompt, setReasonPrompt] = useState<{ deal: Deal; newStage: DealStage } | null>(null);
+  const [reasonText, setReasonText] = useState('');
 
   const totalPipeline = deals.filter((d) => d.stage !== 'Lost').reduce((s, d) => s + d.deal_value, 0);
   const wonValue = deals.filter((d) => d.stage === 'Won').reduce((s, d) => s + d.deal_value, 0);
   const avgDeal = deals.length > 0 ? totalPipeline / deals.filter((d) => d.stage !== 'Lost').length : 0;
-  const winRate = deals.length > 0 ? Math.round((deals.filter((d) => d.stage === 'Won').length / deals.filter(d => d.stage === 'Won' || d.stage === 'Lost').length) * 100) : 0;
+  const winRate = deals.length > 0 ? Math.round((deals.filter((d) => d.stage === 'Won').length / Math.max(1, deals.filter(d => d.stage === 'Won' || d.stage === 'Lost').length)) * 100) : 0;
 
   const handleAdd = (data: Partial<Deal>) => {
     const newDeal: Deal = {
@@ -43,8 +46,23 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
   };
 
   const changeStage = (dealId: string, newStage: DealStage) => {
+    const deal = deals.find((d) => d.id === dealId);
+    if (!deal) return;
+    if (newStage === 'Won' || newStage === 'Lost') {
+      setReasonPrompt({ deal, newStage });
+      setReasonText('');
+      return;
+    }
     setDeals(deals.map((d) => d.id === dealId ? { ...d, stage: newStage } : d));
     toast.success(`Deal moved to ${newStage}`);
+  };
+
+  const confirmReason = () => {
+    if (!reasonPrompt) return;
+    const { deal, newStage } = reasonPrompt;
+    setDeals(deals.map((d) => d.id === deal.id ? { ...d, stage: newStage, won_lost_reason: reasonText } : d));
+    toast.success(`Deal marked ${newStage}${reasonText ? ` · ${reasonText}` : ''}`);
+    setReasonPrompt(null);
   };
 
   // Team performance data
@@ -162,6 +180,38 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Add New Deal</DialogTitle></DialogHeader>
           <AddDealForm onSubmit={handleAdd} onCancel={() => setShowAddForm(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Won/Lost Reason Prompt */}
+      <Dialog open={!!reasonPrompt} onOpenChange={(o) => !o && setReasonPrompt(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark deal as {reasonPrompt?.newStage}</DialogTitle>
+          </DialogHeader>
+          {reasonPrompt && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {reasonPrompt.deal.company} · {formatCurrency(reasonPrompt.deal.deal_value)}
+              </p>
+              <div>
+                <Label className="text-sm">
+                  {reasonPrompt.newStage === 'Won' ? 'Why did we win? (optional)' : 'Why did we lose? (price, competitor, timing, fit…)'}
+                </Label>
+                <Textarea
+                  value={reasonText}
+                  onChange={(e) => setReasonText(e.target.value)}
+                  className="mt-1"
+                  rows={3}
+                  placeholder={reasonPrompt.newStage === 'Won' ? 'Strong product fit…' : 'Lost to competitor X on price'}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setReasonPrompt(null)}>Cancel</Button>
+                <Button className="flex-1" onClick={confirmReason}>Confirm</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
