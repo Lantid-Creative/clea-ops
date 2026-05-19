@@ -42,6 +42,35 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+
+    // --- Reset password flow ---
+    if (body?.action === "reset_password" && typeof body?.user_id === "string") {
+      const targetId = body.user_id as string;
+      const { data: target, error: getErr } = await admin.auth.admin.getUserById(targetId);
+      if (getErr || !target.user) {
+        return new Response(JSON.stringify({ error: getErr?.message ?? "User not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const newPassword = genPassword(14);
+      const { error: updErr } = await admin.auth.admin.updateUserById(targetId, { password: newPassword });
+      if (updErr) {
+        return new Response(JSON.stringify({ error: updErr.message }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      await admin.from("audit_log").insert({
+        actor_id: userData.user.id,
+        action: "password_reset",
+        target_user_id: targetId,
+        details: {},
+      });
+      return new Response(JSON.stringify({
+        result: { email: target.user.email, password: newPassword, status: "reset" },
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // --- Create users flow ---
     const users: Array<{ email: string; password?: string; full_name?: string; role?: string; department?: string | null }> =
       Array.isArray(body?.users) ? body.users : [body];
 
