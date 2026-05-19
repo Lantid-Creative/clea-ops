@@ -3,7 +3,20 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 export type AppRole = 'admin' | 'manager' | 'staff';
-export type AppDepartment = 'sales' | 'marketing' | 'customer_success' | 'engineering' | 'design' | 'operations';
+export type AppDepartment =
+  | 'support'
+  | 'onboarding'
+  | 'sales'
+  | 'compliance'
+  | 'finance'
+  | 'hr'
+  | 'product_dev'
+  // legacy values kept for backward compatibility with existing rows
+  | 'marketing'
+  | 'customer_success'
+  | 'engineering'
+  | 'design'
+  | 'operations';
 
 interface AuthContextType {
   session: Session | null;
@@ -20,14 +33,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Maps departments to the tab(s) they can access
+// Maps each department to the tabs its staff can see.
+// Managers see everything (read-only outside their dept); admins see all.
 const DEPARTMENT_TAB_MAP: Record<AppDepartment, string[]> = {
-  sales: ['sales'],
+  support: ['tickets', 'clients', 'kpis'],
+  onboarding: ['clients', 'kpis'],
+  sales: ['sales', 'clients', 'kpis'],
+  compliance: ['clients', 'kpis'], // KYC read-only per plan
+  finance: ['kpis', 'hr'],
+  hr: ['hr', 'kpis'],
+  product_dev: ['projects', 'tickets', 'kpis'],
+  // legacy mappings
   marketing: ['kpis'],
-  customer_success: ['clients', 'tickets'],
+  customer_success: ['clients', 'tickets', 'kpis'],
   engineering: ['projects', 'kpis', 'tickets'],
   design: ['projects', 'kpis'],
   operations: ['clients', 'hr', 'kpis', 'tickets'],
+};
+
+// Departments whose access to a given tab is read-only even for managers
+const READ_ONLY_OVERRIDES: Partial<Record<AppDepartment, string[]>> = {
+  compliance: ['clients'], // Compliance staff/managers can view KYC but not edit
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -93,11 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (tab === 'admin') return role === 'admin';
     if (role === 'admin') return true;
     if (role === 'manager') {
-      // Managers can edit only their own department's tab
       if (!department) return false;
-      return DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+      const allowed = DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
+      const readOnly = READ_ONLY_OVERRIDES[department]?.includes(tab) ?? false;
+      return allowed && !readOnly;
     }
-    // Staff: read-only
     return false;
   };
 

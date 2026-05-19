@@ -363,6 +363,12 @@ export type Database = {
         | "engineering"
         | "design"
         | "operations"
+        | "support"
+        | "onboarding"
+        | "compliance"
+        | "finance"
+        | "hr"
+        | "product_dev"
       app_role: "admin" | "manager" | "staff"
       client_stage:
         | "Lead"
@@ -513,6 +519,12 @@ export const Constants = {
         "engineering",
         "design",
         "operations",
+        "support",
+        "onboarding",
+        "compliance",
+        "finance",
+        "hr",
+        "product_dev",
       ],
       app_role: ["admin", "manager", "staff"],
       client_stage: [

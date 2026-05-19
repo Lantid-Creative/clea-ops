@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { AppRole, AppDepartment } from '@/hooks/useAuth';
-import { Loader2, Plus, Copy, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, Copy, RefreshCw, KeyRound } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
@@ -31,7 +31,23 @@ type AuditEntry = {
 };
 
 const ROLES: AppRole[] = ['admin', 'manager', 'staff'];
-const DEPARTMENTS: AppDepartment[] = ['sales', 'marketing', 'customer_success', 'engineering', 'design', 'operations'];
+const DEPARTMENTS: AppDepartment[] = [
+  'support', 'onboarding', 'sales', 'compliance', 'finance', 'hr', 'product_dev',
+];
+const DEPT_LABEL: Record<string, string> = {
+  support: 'Support',
+  onboarding: 'Onboarding',
+  sales: 'Sales',
+  compliance: 'Compliance',
+  finance: 'Finance',
+  hr: 'HR',
+  product_dev: 'Product / Dev',
+  marketing: 'Marketing (legacy)',
+  customer_success: 'Customer Success (legacy)',
+  engineering: 'Engineering (legacy)',
+  design: 'Design (legacy)',
+  operations: 'Operations (legacy)',
+};
 
 export function AdminModule() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -47,6 +63,25 @@ export function AdminModule() {
   const [newRole, setNewRole] = useState<AppRole>('staff');
   const [newDept, setNewDept] = useState<AppDepartment | 'none'>('none');
   const [lastCreated, setLastCreated] = useState<{ email: string; password: string } | null>(null);
+  const [resetId, setResetId] = useState<string | null>(null);
+
+  const handleResetPassword = async (userId: string) => {
+    const member = members.find((m) => m.user_id === userId);
+    if (!member) return;
+    if (!confirm(`Generate a new password for ${member.full_name ?? 'this user'}?`)) return;
+    setResetId(userId);
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: { action: 'reset_password', user_id: userId },
+    });
+    setResetId(null);
+    const result = (data as any)?.result;
+    if (error || !result?.password) {
+      toast({ title: 'Reset failed', description: error?.message || result?.error || 'Unknown error', variant: 'destructive' });
+      return;
+    }
+    setLastCreated({ email: result.email, password: result.password });
+    setCreateOpen(true);
+  };
   const { toast } = useToast();
 
   const generatePassword = (len = 14) => {
@@ -162,12 +197,14 @@ export function AdminModule() {
     members.find((m) => m.user_id === id)?.full_name ?? id?.slice(0, 8) ?? '—';
 
   const formatAction = (a: AuditEntry) => {
-    const d = a.details ?? {};
+    const d = (a.details ?? {}) as Record<string, unknown>;
+    const label = (v: unknown) => (typeof v === 'string' ? (DEPT_LABEL[v] ?? v) : v ?? 'none');
     switch (a.action) {
       case 'role_changed': return `Role: ${d.from} → ${d.to}`;
-      case 'department_changed': return `Dept: ${d.from ?? 'none'} → ${d.to ?? 'none'}`;
+      case 'department_changed': return `Dept: ${label(d.from)} → ${label(d.to)}`;
       case 'user_activated': return 'Activated';
       case 'user_deactivated': return 'Deactivated';
+      case 'password_reset': return 'Password reset';
       default: return a.action;
     }
   };
@@ -241,13 +278,23 @@ export function AdminModule() {
                       <SelectContent>
                         <SelectItem value="none">— None —</SelectItem>
                         {DEPARTMENTS.map((d) => (
-                          <SelectItem key={d} value={d} className="capitalize">{d.replace('_', ' ')}</SelectItem>
+                          <SelectItem key={d} value={d}>{DEPT_LABEL[d] ?? d}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-2">
                     {savingId === m.user_id && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => handleResetPassword(m.user_id)}
+                      disabled={resetId === m.user_id}
+                      title="Generate a new password"
+                    >
+                      {resetId === m.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                    </Button>
                     <Switch
                       checked={m.is_active}
                       onCheckedChange={(v) => update(m.user_id, { is_active: v })}
@@ -338,7 +385,7 @@ export function AdminModule() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">— None —</SelectItem>
-                      {DEPARTMENTS.map((d) => <SelectItem key={d} value={d} className="capitalize">{d.replace('_', ' ')}</SelectItem>)}
+                      {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{DEPT_LABEL[d] ?? d}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
