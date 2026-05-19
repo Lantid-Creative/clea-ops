@@ -8,6 +8,7 @@ import { HrModule } from '@/components/hr/HrModule';
 import { ProjectsModule } from '@/components/projects/ProjectsModule';
 import { AdminModule } from '@/components/admin/AdminModule';
 import { LoginPage } from '@/components/auth/LoginPage';
+import { FirstLoginPasswordModal } from '@/components/auth/FirstLoginPasswordModal';
 import { useAuth } from '@/hooks/useAuth';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
@@ -46,6 +47,7 @@ const Index = () => {
       userRole={role}
       visibleTabs={visibleTabs}
     >
+      <FirstLoginPasswordModal />
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
