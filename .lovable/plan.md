@@ -1,99 +1,131 @@
-# Clea Ops — Team, Roles & User Flows
+# KPI System & Cross-Team Workflows — Plan
 
-## 1. Role model
+Goal: KPIs stop being manual numbers in a table. They are **computed automatically from real activity** in the system (tickets, clients, deals), and shown per department on the KPIs tab and on each staff member's dashboard. Some KPIs depend on more than one team working together, so we also wire up the **hand-off flows** between Support, Sales, Compliance, Onboarding, and Finance.
 
-Three roles (already in DB):
+---
 
-- **Admin** — full access to everything, manages users, departments, and settings.
-- **Manager** — read access to all modules; edit access only within their own department.
-- **Staff** — read-only access, and only to the modules mapped to their department.
+## 1. KPI definitions per department
 
-Plus a **department** assignment per user (set by admin):
-`Support`, `Onboarding`, `Sales`, `Compliance`, `Finance`, `HR`, `Product/Dev`, `Leadership`.
+All KPIs are computed for a selected period (default: current month) from existing tables.
 
-## 2. Who is who (current users)
+### Support
+Source: `tickets` table.
+- **Tickets opened** — count where `created_at` in period.
+- **Tickets closed** — count where `status in ('resolved','closed')` and `resolved_at` in period.
+- **Open backlog** — tickets still `open` / `in_progress` / `waiting_on_client`.
+- **Avg first-response time** — `first_response_at - created_at`.
+- **Avg resolution time** — `resolved_at - created_at`.
+- **SLA breaches** — tickets past `due_date` and not resolved.
 
-**Admins** (full access):
-- damilola@tryclea.com
-- domotola@tryclea.com
-- sidneyegwuatu@tryclea.com
-- iyiolaosuagwu@tryclea.com
-- compliance@tryclea.com
-- sheriff@tryclea.com
+### Sales
+Source: `clients` + (new) `deals` activity.
+- **New leads added** — clients created in period with `stage='Lead'`.
+- **Leads contacted** — clients moved out of `Lead` in period.
+- **Conversion to transacting customer** — % of leads that reach `stage='Active'` (transacting). This is the headline Sales KPI.
+- **Active customers this month** — `stage='Active'` and `transaction_volume > 0`.
+- **Revenue / volume** — sum of `transaction_volume` for converted customers.
 
-**Staff/Manager (to be assigned a department by an admin):**
-- Support & Onboarding: titofunmi (fadeleoluwatofunmi), yinkaaremu, olubusayo, omotolani, omotoshookiki, goodnessayomide
-- Sales: mabinuori (not yet created — flag), akinwaopeyemi, kemiadedoyin, sholaazeez, collinsonwurah
-- Compliance: kazir.arowona, yusufisa, yusuf, ishakuibrahim
-- Finance/Ops: tairatoyadiran, okmabs, emmanuel
+### Compliance
+Source: `clients` (KYC fields).
+- **KYC submitted** — clients entering `KYC Submitted` in period.
+- **KYC reviewed** — clients moved to `Verified` or rejected in period.
+- **Avg KYC turnaround time** — time between `KYC Submitted` → `Verified`.
+- **Pending KYC queue** — clients stuck in `KYC Review`.
 
-Admins promote anyone to **Manager** for their department via Admin → Members.
+### Onboarding
+Source: `clients`.
+- **Customers onboarded** — clients with `onboard_date` in period.
+- **Avg time from Verified → Onboarded**.
+- **Drop-offs** — clients verified > 14 days ago and not onboarded.
 
-## 3. Module visibility matrix
+### Customer Success
+Source: `clients` + `tickets`.
+- **Active customers engaged** — clients with `last_contact_date` in period.
+- **Follow-ups pending** — `follow_up_required = true`.
+- **Churn risk** — Active customers with no contact > 30 days.
 
-| Module | Admin | Manager | Staff (matching dept) | Staff (other dept) |
-|---|---|---|---|---|
-| Dashboard / KPIs | full | read all | read own dept KPIs | hidden |
-| Clients (customers) | full | read all, edit own dept | read only | hidden unless Support/Onboarding/Sales |
-| Tickets | full | read all, edit own dept | read + comment on own dept tickets | hidden unless Support |
-| Projects | full | read all, edit own dept | read own dept | hidden unless Product/Dev |
-| Sales pipeline | full | read all, edit own dept | read own dept | hidden unless Sales |
-| HR | full | HR manager edits | HR staff read | hidden |
-| Admin (users, roles, audit) | full | hidden | hidden | hidden |
-| Submit Ticket (public portal) | — | — | — | public, anyone |
+### Finance / Operations
+Source: `clients`.
+- **Total transaction volume** — sum across all Active customers.
+- **Top 10 customers by volume**.
+- **Volume growth** — vs previous period.
 
-Enforced two ways:
-- **UI**: sidebar hides modules the user can't access; edit buttons disabled for read-only.
-- **DB (RLS)**: existing `has_role`, `is_user_active`, `can_edit_*` functions already gate writes. We'll extend with `can_view_module(user, module)` for stricter reads where needed.
+### HR
+Manual KPIs (no transactional source yet) — keep current manual entry.
 
-## 4. Core user flows
+### Product / Dev
+Source: `tickets` filtered to `category in ('bug','feature','engineering')` + Projects board.
+- **Bugs opened / closed** in period.
+- **Tasks moved to Done** on the project board.
 
-### A. Admin onboarding a new teammate
-1. Admin → **Admin → Members → New user**
-2. Enters `name@tryclea.com`, picks role + department.
-3. System creates account + random password, shows copy-to-clipboard credentials.
-4. Admin shares creds securely; user logs in, prompted to change password.
+---
 
-### B. Staff daily flow (example: Support)
-1. Logs in → lands on Dashboard scoped to Support KPIs.
-2. Sees **Tickets** tab → list filtered to Support category.
-3. Opens ticket → adds internal comment, changes status, attaches file.
-4. Cannot see Sales, HR, Admin tabs.
+## 2. Cross-team workflows (who hands off to whom)
 
-### C. Manager flow (example: Sales Manager)
-1. Sees all modules read-only **except** Sales + Clients where they can edit.
-2. Can bulk-import customers, reassign agents within Sales.
-3. Cannot create users or change roles.
+```text
+Lead (Sales)
+   │  capture lead, qualify
+   ▼
+KYC Submitted (Sales → Compliance)
+   │  Compliance reviews documents
+   ▼
+Verified (Compliance → Onboarding)
+   │  Onboarding sets the customer live
+   ▼
+Onboarded → Active (Onboarding → Customer Success / Finance)
+   │  CS monitors engagement, Finance tracks volume
+   ▼
+Support tickets can be raised at any stage (Support owns resolution,
+may re-route to Compliance, Sales, or Product/Dev via ticket category).
+```
 
-### D. Customer / external flow
-1. External user visits `/submit-ticket` (public).
-2. Fills form → ticket created with `source=portal`, status `open`.
-3. Routed by category to the right department's queue.
+Concretely this means:
+- When **Sales** moves a client to `KYC Submitted`, it appears in **Compliance's queue** automatically.
+- When **Compliance** marks `Verified`, it appears in **Onboarding's queue**.
+- A **Support ticket** tagged `kyc` is visible to Compliance; tagged `billing` to Finance; tagged `bug` to Product/Dev — they can comment/resolve in their own tab without leaving their module.
 
-### E. Bulk customer import (already built)
-- Admin or Sales/Support manager → Clients → **Bulk import** → CSV/Excel → upsert by email → summary dialog.
+No new tables needed — these are filtered views over `clients` and `tickets`.
 
-### F. Password reset
-- Login page → "Forgot password" → email link → `/reset-password` → set new password.
+---
 
-## 5. What we'll build to deliver this plan
+## 3. What gets built
 
-1. **Department + role enforcement in sidebar** (`AppShell.tsx`): hide modules per matrix above.
-2. **Per-module read guards**: redirect / show "no access" card if a staff opens a module not mapped to their department.
-3. **Admin → Members UI upgrades**:
-   - Assign department dropdown
-   - Promote to Manager / demote
-   - Deactivate user (sets `is_active=false`)
-   - Resend / reset password
-4. **First-login password change** prompt.
-5. **Audit log view** in Admin (table already exists) — show recent user/role/ticket changes.
-6. **Department-scoped dashboards**: KPIs filter by user's department for staff.
+1. **`kpi_metrics` SQL view (or RPC functions)** — one function per department that returns the numbers above for a given date range. Computed live from `tickets` and `clients`. No more manual KPI entry for the data-driven ones.
+2. **Refactor `KpisModule.tsx`** — switch from the manual `kpi_targets` table to calling these RPCs. Show big stat cards per department, with period selector (This month / Last month / Quarter / Custom).
+3. **Per-staff dashboard widgets** — on login, staff see their department's top 3 KPIs as cards above their main tab.
+4. **Department queues** — small "Needs your attention" panel on each module:
+   - Compliance tab: clients in `KYC Submitted`
+   - Onboarding tab: clients `Verified` but not onboarded
+   - CS tab: customers with no contact > 30 days
+   - Sales tab: leads not contacted in 7 days
+5. **Ticket category routing** — when a ticket has category `kyc`, `billing`, `bug`, it shows in the relevant department's ticket view in addition to Support.
+6. **Stage history tracking** — add a tiny `client_stage_history` table (client_id, from_stage, to_stage, changed_at, changed_by) so we can compute "avg KYC turnaround" and "time from Verified → Onboarded". Filled by a trigger on `clients.stage` change.
+7. **Keep manual KPI entry** only for HR and any custom target a manager wants to track alongside the auto ones.
 
-## 6. Open questions before we build
+---
 
-1. Should **Managers** be able to create users in their own department, or admin-only? (default: admin-only)
-2. For staff in **Compliance**, should they see Clients (KYC) read-only? (default: yes)
-3. Do we want a "Leadership" view that sees everything read-only (like Manager but cross-dept)? (default: yes, add `leadership` role)
-4. Confirm department list above — add/remove any?
+## 4. Technical notes
 
-Once you confirm 1–4 (or say "go with defaults"), I'll implement section 5 step by step, starting with the sidebar + access guards.
+- New table: `client_stage_history` (client_id, from_stage, to_stage, changed_at, changed_by uuid). Trigger `clients_stage_history_trg` on `UPDATE OF stage`.
+- New RPCs (SECURITY DEFINER, search_path=public):
+  - `kpi_support(p_from, p_to)`
+  - `kpi_sales(p_from, p_to)`
+  - `kpi_compliance(p_from, p_to)`
+  - `kpi_onboarding(p_from, p_to)`
+  - `kpi_cs(p_from, p_to)`
+  - `kpi_finance(p_from, p_to)`
+  - `kpi_product(p_from, p_to)`
+  - Each returns a JSON object with the named metrics above.
+- RLS: RPCs gated by `is_user_active(auth.uid())`; staff only see their own department's RPC results from the UI.
+- Frontend: new `src/components/kpis/` cards per department; `useKpis(department, range)` hook.
+
+---
+
+## 5. Confirm before I build
+
+1. Headline Sales KPI = **% of leads that reach `stage='Active'`** in the period. OK?
+2. Treat `stage='Active' AND transaction_volume > 0` as "transacting customer". OK?
+3. Default KPI period = **current calendar month**, with selector for Last month / Quarter / Custom. OK?
+4. Keep manual KPI entry for HR only, drop it everywhere else. OK?
+
+Say "go with defaults" and I'll implement sections 1–3.
