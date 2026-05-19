@@ -47,6 +47,7 @@ const Index = () => {
       userRole={role}
       visibleTabs={visibleTabs}
     >
+      <FirstLoginPasswordModal />
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
