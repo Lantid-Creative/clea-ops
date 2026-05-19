@@ -36,6 +36,7 @@ const tabLabels: Record<Tab, string> = {
 
 export function AppShell({ activeTab, onTabChange, children, onLogout, userRole, visibleTabs }: AppShellProps) {
   const tabs = visibleTabs ? allTabs.filter((t) => visibleTabs.includes(t.id)) : allTabs;
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
