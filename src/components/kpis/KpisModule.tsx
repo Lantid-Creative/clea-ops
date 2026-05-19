@@ -1,134 +1,89 @@
 import { useState } from 'react';
-import { Target, TrendingUp, Users, ArrowRight } from 'lucide-react';
-import { StatCard } from '@/components/layout/StatCard';
-import { Input } from '@/components/ui/input';
-import { Department, DEPARTMENTS, DEPT_COLORS, KpiTarget } from '@/lib/types';
-import { formatCurrency, formatNumber, getProgressColor, getProgressTextColor } from '@/lib/helpers';
-import { mockKpis, mockEmployees, companyTarget } from '@/lib/mock-data';
+import { Target } from 'lucide-react';
+import { useAuth, AppDepartment } from '@/hooks/useAuth';
+import { DeptKpiCards } from './DeptKpiCards';
+import { KpiDept, KpiRange } from '@/hooks/useKpis';
 
-export function KpisModule({ canEdit = true }: { canEdit?: boolean }) {
-  const [kpis, setKpis] = useState<KpiTarget[]>(mockKpis);
-  const [activeDept, setActiveDept] = useState<Department>('Sales');
+const DEPT_TABS: Array<{ key: KpiDept; label: string }> = [
+  { key: 'sales', label: 'Sales' },
+  { key: 'support', label: 'Support' },
+  { key: 'compliance', label: 'Compliance' },
+  { key: 'onboarding', label: 'Onboarding' },
+  { key: 'cs', label: 'Customer Success' },
+  { key: 'finance', label: 'Finance' },
+  { key: 'product', label: 'Product / Dev' },
+];
 
-  const progress = Math.round((companyTarget.current / companyTarget.target) * 100);
-  const transactionsNeeded = Math.ceil(companyTarget.target / companyTarget.avgTransactionSize);
-  const activeUsersNeeded = Math.ceil(transactionsNeeded / 4);
-  const monthlySignupsNeeded = Math.ceil(activeUsersNeeded / 10);
+// Map a user's department to the KPI tab they own
+const DEPT_TO_KPI: Partial<Record<AppDepartment, KpiDept>> = {
+  sales: 'sales',
+  support: 'support',
+  compliance: 'compliance',
+  onboarding: 'onboarding',
+  customer_success: 'cs',
+  finance: 'finance',
+  product_dev: 'product',
+  engineering: 'product',
+  operations: 'finance',
+};
 
-  const deptKpis = kpis.filter((k) => k.department === activeDept);
-  const deptEmployees = mockEmployees.filter((e) => e.department === activeDept);
+const RANGES: Array<{ key: KpiRange; label: string }> = [
+  { key: 'this_month', label: 'This Month' },
+  { key: 'last_month', label: 'Last Month' },
+  { key: 'this_quarter', label: 'This Quarter' },
+];
 
-  const updateKpi = (id: string, field: 'target_value' | 'current_value', value: number) => {
-    setKpis(kpis.map((k) => k.id === id ? { ...k, [field]: value } : k));
-  };
+export function KpisModule() {
+  const { role, department } = useAuth();
+  const isPrivileged = role === 'admin' || role === 'manager';
+  const ownDept = department ? DEPT_TO_KPI[department] ?? null : null;
+  const initial: KpiDept = isPrivileged ? 'sales' : (ownDept ?? 'sales');
+
+  const [activeDept, setActiveDept] = useState<KpiDept>(initial);
+  const [range, setRange] = useState<KpiRange>('this_month');
+
+  const visibleTabs = isPrivileged
+    ? DEPT_TABS
+    : DEPT_TABS.filter((t) => t.key === ownDept);
 
   return (
     <div className="p-4 space-y-6">
-      {/* North Star Metric */}
       <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-2">
           <Target className="h-5 w-5 text-primary" />
-          <h2 className="font-bold text-lg">North Star: {companyTarget.metric}</h2>
+          <h2 className="font-bold text-lg">Live KPIs</h2>
         </div>
-        <div className="flex items-end gap-2 mb-3">
-          <span className="text-3xl font-bold">{formatCurrency(companyTarget.current)}</span>
-          <span className="text-muted-foreground text-sm mb-1">/ {formatCurrency(companyTarget.target)}</span>
+        <p className="text-sm text-muted-foreground">
+          Computed from real tickets and clients. Updates as your team works.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {visibleTabs.map((d) => (
+            <button
+              key={d.key}
+              onClick={() => setActiveDept(d.key)}
+              className={`pipeline-btn ${activeDept === d.key ? 'pipeline-btn-active' : 'bg-card text-muted-foreground border-border hover:bg-accent'}`}
+            >
+              {d.label}
+            </button>
+          ))}
         </div>
-        <div className="mb-4 h-3 rounded-full bg-border overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: 'Avg Transaction', value: formatCurrency(companyTarget.avgTransactionSize) },
-            { label: 'Transactions Needed', value: formatNumber(transactionsNeeded) },
-            { label: 'Active Users Required', value: formatNumber(activeUsersNeeded) },
-            { label: 'Monthly Sign-ups', value: formatNumber(monthlySignupsNeeded) },
-          ].map((item, i) => (
-            <div key={i} className="rounded-lg bg-card border p-3">
-              <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
-              <p className="font-bold">{item.value}</p>
-            </div>
+        <div className="flex gap-1 rounded-lg border bg-card p-1">
+          {RANGES.map((r) => (
+            <button
+              key={r.key}
+              onClick={() => setRange(r.key)}
+              className={`px-3 py-1.5 text-xs rounded-md transition ${range === r.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+            >
+              {r.label}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Department Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {DEPARTMENTS.map((dept) => (
-          <button
-            key={dept}
-            onClick={() => setActiveDept(dept)}
-            className={`pipeline-btn ${activeDept === dept ? 'pipeline-btn-active' : 'bg-card text-muted-foreground border-border hover:bg-accent'}`}
-          >
-            {dept}
-          </button>
-        ))}
-      </div>
-
-      {/* KPI Table */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Metric</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Target</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Current</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground min-w-[120px]">Progress</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deptKpis.map((kpi) => {
-                const pct = kpi.target_value > 0 ? Math.round((kpi.current_value / kpi.target_value) * 100) : 0;
-                return (
-                  <tr key={kpi.id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-medium">{kpi.metric_name}</td>
-                    <td className="px-4 py-3 text-right">
-                      {canEdit ? (
-                        <Input type="number" value={kpi.target_value} onChange={(e) => updateKpi(kpi.id, 'target_value', Number(e.target.value))} className="h-7 w-24 text-right text-sm ml-auto" />
-                      ) : (
-                        <span className="text-sm">{formatNumber(kpi.target_value)}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {canEdit ? (
-                        <Input type="number" value={kpi.current_value} onChange={(e) => updateKpi(kpi.id, 'current_value', Number(e.target.value))} className="h-7 w-24 text-right text-sm ml-auto" />
-                      ) : (
-                        <span className="text-sm">{formatNumber(kpi.current_value)}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="h-2 rounded-full bg-border">
-                        <div className={`h-full rounded-full transition-all ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                      </div>
-                    </td>
-                    <td className={`px-4 py-3 text-right font-bold ${getProgressTextColor(pct)}`}>{pct}%</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Team Members */}
-      <div>
-        <h3 className="mb-3 font-semibold">{activeDept} Team ({deptEmployees.length})</h3>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {deptEmployees.map((emp) => (
-            <div key={emp.id} className="flex items-center gap-3 rounded-lg border bg-card p-3">
-              <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${DEPT_COLORS[activeDept]}`}>
-                {emp.name.split(' ').map((n) => n[0]).join('')}
-              </div>
-              <div>
-                <p className="font-medium text-sm">{emp.name}</p>
-                <p className="text-xs text-muted-foreground">{emp.role}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <DeptKpiCards dept={activeDept} range={range} />
     </div>
   );
 }
