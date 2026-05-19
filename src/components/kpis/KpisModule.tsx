@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Target } from 'lucide-react';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import { useAuth, AppDepartment } from '@/hooks/useAuth';
 import { DeptKpiCards } from './DeptKpiCards';
 import { KpiDept, KpiRange } from '@/hooks/useKpis';
