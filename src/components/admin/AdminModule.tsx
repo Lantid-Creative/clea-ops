@@ -31,7 +31,23 @@ type AuditEntry = {
 };
 
 const ROLES: AppRole[] = ['admin', 'manager', 'staff'];
-const DEPARTMENTS: AppDepartment[] = ['sales', 'marketing', 'customer_success', 'engineering', 'design', 'operations'];
+const DEPARTMENTS: AppDepartment[] = [
+  'support', 'onboarding', 'sales', 'compliance', 'finance', 'hr', 'product_dev',
+];
+const DEPT_LABEL: Record<string, string> = {
+  support: 'Support',
+  onboarding: 'Onboarding',
+  sales: 'Sales',
+  compliance: 'Compliance',
+  finance: 'Finance',
+  hr: 'HR',
+  product_dev: 'Product / Dev',
+  marketing: 'Marketing (legacy)',
+  customer_success: 'Customer Success (legacy)',
+  engineering: 'Engineering (legacy)',
+  design: 'Design (legacy)',
+  operations: 'Operations (legacy)',
+};
 
 export function AdminModule() {
   const [members, setMembers] = useState<Member[]>([]);
