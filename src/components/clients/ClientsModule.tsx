@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil, Upload, AlertCircle, MessageSquare, Trash2, User as UserIcon } from 'lucide-react';
 import { KycChecklist, StageSlaBadge } from './KycChecklist';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
