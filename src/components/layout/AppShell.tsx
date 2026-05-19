@@ -101,29 +101,29 @@ export function AppShell({ activeTab, onTabChange, children, onLogout, userRole,
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-[hsl(221,100%,97%)] via-background to-[hsl(221,100%,95%)]">
         <AppSidebarNav tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
 
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-card px-4 shadow-sm">
+          <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur px-5">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              <img src={cleaLogo} alt="Clea" className="h-7 w-auto object-contain" />
+              <img src={cleaLogo} alt="Clea" className="h-8 w-auto object-contain" />
               <div>
-                <h1 className="text-sm font-bold leading-none">Ops</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">{tabLabels[activeTab]}</p>
+                <h1 className="text-base font-bold leading-none tracking-tight">Ops</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block mt-0.5">{tabLabels[activeTab]}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {userRole && (
-                <span className="text-xs text-muted-foreground capitalize hidden sm:inline">{userRole}</span>
+                <span className="text-xs font-medium text-muted-foreground capitalize hidden sm:inline px-2.5 py-1 rounded-full bg-secondary">{userRole}</span>
               )}
-              <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={onLogout} className="h-9 w-9 rounded-full">
                 <LogOut className="h-4 w-4" />
               </Button>
               <button
                 onClick={() => setProfileOpen(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground hover:opacity-90"
+                className="flex h-9 w-9 items-center justify-center rounded-full brand-gradient text-xs font-semibold text-primary-foreground shadow-md hover:shadow-lg transition-shadow"
                 title="My profile"
               >
                 {userRole ? userRole.charAt(0).toUpperCase() : 'U'}
