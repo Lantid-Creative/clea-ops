@@ -103,37 +103,39 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
       </div>
 
       {viewMode === 'pipeline' ? (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {DEAL_STAGES.map((stage) => {
-            const stageDeals = deals.filter((d) => d.stage === stage);
-            return (
-              <div key={stage} className="space-y-2">
-                <div className="flex items-center justify-between rounded-lg bg-card border p-2">
-                  <span className="text-sm font-semibold">{stage}</span>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{stageDeals.length}</span>
-                </div>
-                <div className="space-y-2">
-                  {stageDeals.map((deal) => (
-                    <div key={deal.id} className="stat-card space-y-1.5 text-sm">
-                      <h4 className="font-semibold leading-tight">{deal.company}</h4>
-                      <p className="text-muted-foreground">{deal.contact}</p>
-                      <p className="font-bold text-primary">{formatCurrency(deal.deal_value)}</p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{deal.assigned_bdm.split(' ')[0]}</span>
-                        <span>{deal.probability}%</span>
+        <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:overflow-visible md:px-0">
+          <div className="grid min-w-[900px] grid-cols-6 gap-4 md:min-w-0 md:grid-cols-3 lg:grid-cols-6">
+            {DEAL_STAGES.map((stage) => {
+              const stageDeals = deals.filter((d) => d.stage === stage);
+              return (
+                <div key={stage} className="space-y-2">
+                  <div className="flex items-center justify-between rounded-lg bg-card border p-2">
+                    <span className="text-sm font-semibold">{stage}</span>
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{stageDeals.length}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {stageDeals.map((deal) => (
+                      <div key={deal.id} className="stat-card space-y-1.5 text-sm">
+                        <h4 className="font-semibold leading-tight">{deal.company}</h4>
+                        <p className="text-muted-foreground">{deal.contact}</p>
+                        <p className="font-bold text-primary">{formatCurrency(deal.deal_value)}</p>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{deal.assigned_bdm.split(' ')[0]}</span>
+                          <span>{deal.probability}%</span>
+                        </div>
+                        <Select value={deal.stage} onValueChange={(v) => changeStage(deal.id, v as DealStage)}>
+                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {DEAL_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <Select value={deal.stage} onValueChange={(v) => changeStage(deal.id, v as DealStage)}>
-                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {DEAL_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
