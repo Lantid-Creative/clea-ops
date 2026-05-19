@@ -119,33 +119,40 @@ const queueFor = (dept: AppDepartment | null, role: string | null): QueueConfig 
           return (data ?? []).map((t) => ({ id: t.id, title: t.title, subtitle: `${t.category} · ${t.priority}` }));
         },
       };
-    case 'finance':
-    case 'operations':
-      return {
-        label: 'Billing tickets',
-        description: 'Open finance / billing requests.',
-        targetTab: 'tickets',
-        fetch: async () => {
-          const { data } = await supabase
-            .from('tickets')
-            .select('id, title, priority')
-            .eq('category', 'billing')
-            .not('status', 'in', '(resolved,closed)')
-            .eq('archived', false)
-            .limit(5);
-          return (data ?? []).map((t) => ({ id: t.id, title: t.title, subtitle: t.priority }));
-        },
-      };
     default:
       return null;
   }
 };
 
+const adminQueue = (): QueueConfig => ({
+  label: 'Cross-team bottlenecks',
+  description: 'Where work is stuck across the pipeline right now.',
+  targetTab: 'clients',
+  fetch: async () => {
+    const items: QueueItem[] = [];
+    const cutoff14 = new Date(Date.now() - 14 * 86400_000).toISOString();
+    const cutoff30 = new Date(Date.now() - 30 * 86400_000).toISOString();
+
+    const [kyc, verified, churn, sla] = await Promise.all([
+      supabase.from('clients').select('id', { count: 'exact', head: true }).in('stage', ['KYC Submitted', 'KYC Review']).eq('archived', false),
+      supabase.from('clients').select('id', { count: 'exact', head: true }).eq('stage', 'Verified').eq('archived', false).lt('updated_at', cutoff14),
+      supabase.from('clients').select('id', { count: 'exact', head: true }).eq('stage', 'Active').eq('archived', false).or(`last_contact_date.is.null,last_contact_date.lt.${cutoff30}`),
+      supabase.from('tickets').select('id', { count: 'exact', head: true }).not('due_date', 'is', null).lt('due_date', new Date().toISOString()).not('status', 'in', '(resolved,closed)').eq('archived', false),
+    ]);
+
+    if ((kyc.count ?? 0) > 0) items.push({ id: 'kyc', title: `${kyc.count} clients pending KYC review`, subtitle: 'Compliance' });
+    if ((verified.count ?? 0) > 0) items.push({ id: 'ver', title: `${verified.count} verified clients stuck >14 days`, subtitle: 'Onboarding' });
+    if ((churn.count ?? 0) > 0) items.push({ id: 'churn', title: `${churn.count} active customers at churn risk`, subtitle: 'Customer Success' });
+    if ((sla.count ?? 0) > 0) items.push({ id: 'sla', title: `${sla.count} tickets past SLA`, subtitle: 'Support' });
+    return items;
+  },
+});
+
 export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => void }) {
   const { department, role } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const config = queueFor(department, role);
+  const config = role === 'admin' ? adminQueue() : queueFor(department, role);
 
   useEffect(() => {
     if (!config) { setLoading(false); return; }
@@ -154,7 +161,7 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
       if (!cancelled) { setItems(r); setLoading(false); }
     });
     return () => { cancelled = true; };
-  }, [department]);
+  }, [department, role]);
 
   if (!config) return null;
   if (loading) return <div className="mx-4 mt-4 h-24 rounded-xl border bg-card animate-pulse" />;
