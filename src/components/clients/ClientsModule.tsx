@@ -156,22 +156,33 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
         });
       });
 
+      // Dedupe by email keeping last occurrence
       const uniq = new Map<string, ImportRow>();
       rows.forEach((r) => uniq.set(r.email, r));
-      const emails = Array.from(uniq.keys());
+      const skipped = rows.length - uniq.size;
 
-      const { data: existing, error: fetchErr } = await supabase
-        .from('clients').select('id,email').in('email', emails);
-      if (fetchErr) throw fetchErr;
-      const byEmail = new Map<string, string>();
-      (existing ?? []).forEach((c: any) => byEmail.set(String(c.email).toLowerCase(), c.id));
+      // Find existing emails (chunked to avoid URL length limits)
+      const allEmails = Array.from(uniq.keys());
+      const existingIds = new Set<string>();
+      const CHUNK = 200;
+      for (let i = 0; i < allEmails.length; i += CHUNK) {
+        const slice = allEmails.slice(i, i + CHUNK);
+        const { data, error } = await supabase
+          .from('clients').select('email').in('email', slice);
+        if (error) throw error;
+        (data ?? []).forEach((c: any) => existingIds.add(String(c.email).toLowerCase()));
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
-      let created = 0, updated = 0;
+      const kyc = Object.fromEntries(KYC_DOCUMENTS.map((d) => [d, false]));
 
-      for (const r of uniq.values()) {
+      // Build payloads. Map engagement_status="Active" → stage="Active"
+      const payloads = Array.from(uniq.values()).map((r) => {
         const fullName = `${r.first_name} ${r.last_name}`.trim();
-        const payload: any = {
+        const isActive = r.engagement_status.toLowerCase() === 'active';
+        const isOnboarded = r.onboarding_status.toLowerCase() === 'completed';
+        const stage: ClientStage = isActive ? 'Active' : (isOnboarded ? 'Onboarded' : 'Lead');
+        return {
           email: r.email,
           contact_person: fullName,
           company_name: fullName || r.email,
@@ -186,31 +197,35 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
           follow_up_required: r.follow_up_required,
           assigned_agent: r.assigned_agent,
           notes: r.notes,
+          stage,
+          kyc_documents: kyc,
+          transaction_volume: 0,
+          created_by: user?.id ?? null,
         };
-        const existingId = byEmail.get(r.email);
-        if (existingId) {
-          const { error } = await supabase.from('clients').update(payload).eq('id', existingId);
-          if (error) errors.push(`${r.email}: ${error.message}`);
-          else updated++;
-        } else {
-          const kyc = Object.fromEntries(KYC_DOCUMENTS.map((d) => [d, false]));
-          const { error } = await supabase.from('clients').insert({
-            ...payload,
-            stage: 'Lead',
-            kyc_documents: kyc,
-            transaction_volume: 0,
-            created_by: user?.id ?? null,
-          });
-          if (error) errors.push(`${r.email}: ${error.message}`);
-          else created++;
+      });
+
+      let created = 0, updated = 0;
+      for (let i = 0; i < payloads.length; i += CHUNK) {
+        const batch = payloads.slice(i, i + CHUNK);
+        const { error } = await supabase
+          .from('clients')
+          .upsert(batch, { onConflict: 'email', ignoreDuplicates: false });
+        if (error) {
+          errors.push(`Batch ${i / CHUNK + 1}: ${error.message}`);
+          continue;
+        }
+        for (const p of batch) {
+          if (existingIds.has(p.email)) updated++; else created++;
         }
       }
 
-      setImportResult({ created, updated, skipped: rows.length - uniq.size, errors });
-      toast.success(`Imported ${created} new, updated ${updated}`);
+      setImportResult({ created, updated, skipped, errors });
+      if (created + updated > 0) toast.success(`Imported ${created} new, updated ${updated}`);
+      else if (errors.length) toast.error(`Import failed: ${errors[0]}`);
       load();
     } catch (err: any) {
       toast.error(err.message ?? 'Import failed');
+      setImportResult({ created: 0, updated: 0, skipped: 0, errors: [err.message ?? 'Unknown error'] });
     } finally {
       setImporting(false);
     }
