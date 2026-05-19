@@ -61,6 +61,9 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="flex justify-end">
+        <HowToGuide module="hr" />
+      </div>
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard title="Total Employees" value={formatNumber(employees.length)} icon={<Users className="h-5 w-5" />} trend={{ value: 10, positive: true }} />
