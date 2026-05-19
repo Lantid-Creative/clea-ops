@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { full_name: u.full_name ?? email.split("@")[0] },
+        user_metadata: { full_name: u.full_name ?? email.split("@")[0], must_change_password: true },
       });
       if (createErr || !created.user) {
         results.push({ email, status: "error", error: createErr?.message ?? "unknown" });
