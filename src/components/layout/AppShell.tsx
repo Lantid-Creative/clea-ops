@@ -13,7 +13,7 @@ interface AppShellProps {
 }
 
 const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'clients', label: 'Clients', icon: <Users className="h-5 w-5" /> },
+  { id: 'clients', label: 'Customers', icon: <Users className="h-5 w-5" /> },
   { id: 'tickets', label: 'Tickets', icon: <Ticket className="h-5 w-5" /> },
   { id: 'sales', label: 'Sales', icon: <BarChart3 className="h-5 w-5" /> },
   { id: 'kpis', label: 'KPIs', icon: <Target className="h-5 w-5" /> },
@@ -23,7 +23,7 @@ const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 ];
 
 const tabLabels: Record<Tab, string> = {
-  clients: 'Client Onboarding & Compliance',
+  clients: 'Customer Onboarding & Compliance',
   tickets: 'Tickets & Support',
   sales: 'Sales Pipeline & Commission',
   kpis: 'KPI Dashboard',
