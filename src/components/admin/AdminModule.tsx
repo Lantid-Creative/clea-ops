@@ -257,13 +257,23 @@ export function AdminModule() {
                       <SelectContent>
                         <SelectItem value="none">— None —</SelectItem>
                         {DEPARTMENTS.map((d) => (
-                          <SelectItem key={d} value={d} className="capitalize">{d.replace('_', ' ')}</SelectItem>
+                          <SelectItem key={d} value={d}>{DEPT_LABEL[d] ?? d}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-2">
                     {savingId === m.user_id && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => handleResetPassword(m.user_id)}
+                      disabled={resetId === m.user_id}
+                      title="Generate a new password"
+                    >
+                      {resetId === m.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                    </Button>
                     <Switch
                       checked={m.is_active}
                       onCheckedChange={(v) => update(m.user_id, { is_active: v })}
