@@ -68,7 +68,19 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
         <StatCard title="Contract" value={formatNumber(contract)} icon={<FileText className="h-5 w-5" />} />
       </div>
 
-      {/* Department Grid */}
+      {/* View toggle */}
+      <div className="flex rounded-lg border bg-card p-1 w-fit">
+        {(['employees','leave','onboarding'] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            {v === 'employees' ? 'Employees' : v === 'leave' ? 'Leave Requests' : 'Onboarding'}
+          </button>
+        ))}
+      </div>
+
+      {view === 'leave' && <LeaveRequests />}
+      {view === 'onboarding' && <OnboardingChecklists />}
+      {view === 'employees' && <>
+
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setDeptFilter('All')} className={`pipeline-btn ${deptFilter === 'All' ? 'pipeline-btn-active' : 'bg-card text-muted-foreground border-border hover:bg-accent'}`}>
           All ({employees.length})
@@ -113,6 +125,7 @@ export function HrModule({ canEdit = true }: { canEdit?: boolean }) {
           </div>
         ))}
       </div>
+      </>}
 
       {/* Detail Modal */}
       <Dialog open={!!selectedEmployee} onOpenChange={() => setSelectedEmployee(null)}>
