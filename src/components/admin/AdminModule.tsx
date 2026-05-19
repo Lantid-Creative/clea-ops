@@ -385,7 +385,7 @@ export function AdminModule() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">— None —</SelectItem>
-                      {DEPARTMENTS.map((d) => <SelectItem key={d} value={d} className="capitalize">{d.replace('_', ' ')}</SelectItem>)}
+                      {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{DEPT_LABEL[d] ?? d}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
