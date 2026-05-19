@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatCard } from '@/components/layout/StatCard';
 import { supabase } from '@/integrations/supabase/client';
@@ -367,6 +368,9 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="space-y-4 p-4 md:p-6">
+      <div className="flex justify-end">
+        <HowToGuide module="tickets" />
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard title="Total tickets" value={String(stats.total)} icon={<TicketIcon className="h-4 w-4" />} />
         <StatCard title="Open / in progress" value={String(stats.open)} icon={<Clock className="h-4 w-4" />} />

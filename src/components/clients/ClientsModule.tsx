@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, Plus, Building2, CheckCircle2, Clock, DollarSign, Check, Archive, ArchiveRestore, Pencil, Upload, AlertCircle, MessageSquare, Trash2, User as UserIcon } from 'lucide-react';
 import { KycChecklist, StageSlaBadge } from './KycChecklist';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -445,6 +446,9 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="flex justify-end">
+        <HowToGuide module="clients" />
+      </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard title="Total Customers" value={formatNumber(visible.length)} icon={<Building2 className="h-5 w-5" />} />
         <StatCard title="Active Customers" value={formatNumber(activeClients)} icon={<CheckCircle2 className="h-5 w-5" />} />

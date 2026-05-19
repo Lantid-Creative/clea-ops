@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import type { AppRole, AppDepartment } from '@/hooks/useAuth';
 import { Loader2, Plus, Copy, RefreshCw, KeyRound } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -211,9 +212,12 @@ export function AdminModule() {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold">Team Administration</h2>
-        <p className="text-sm text-muted-foreground">Assign roles and departments, deactivate access, review changes.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Team Administration</h2>
+          <p className="text-sm text-muted-foreground">Assign roles and departments, deactivate access, review changes.</p>
+        </div>
+        <HowToGuide module="admin" />
       </div>
 
       <Tabs defaultValue="members">

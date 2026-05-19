@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { StatCard } from '@/components/layout/StatCard';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import { Deal, DealStage, DEAL_STAGES } from '@/lib/types';
 import { formatCurrency } from '@/lib/helpers';
 import { mockDeals, mockEmployees, defaultSalesSettings } from '@/lib/mock-data';
@@ -77,6 +78,9 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="flex justify-end">
+        <HowToGuide module="sales" />
+      </div>
       {/* VP Summary */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard title="Total Pipeline" value={formatCurrency(totalPipeline)} icon={<BarChart3 className="h-5 w-5" />} trend={{ value: 18, positive: true }} />
