@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProfileDialog } from '@/components/profile/ProfileDialog';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
@@ -34,6 +36,7 @@ const tabLabels: Record<Tab, string> = {
 
 export function AppShell({ activeTab, onTabChange, children, onLogout, userRole, visibleTabs }: AppShellProps) {
   const tabs = visibleTabs ? allTabs.filter((t) => visibleTabs.includes(t.id)) : allTabs;
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -55,11 +58,16 @@ export function AppShell({ activeTab, onTabChange, children, onLogout, userRole,
           <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
             <LogOut className="h-4 w-4" />
           </Button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground" title={userRole ? `Role: ${userRole}` : undefined}>
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground hover:opacity-90"
+            title="My profile"
+          >
             {userRole ? userRole.charAt(0).toUpperCase() : 'U'}
-          </div>
+          </button>
         </div>
       </header>
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
 
       {/* Desktop tabs */}
       <nav className="hidden border-b bg-card px-4 md:flex">
