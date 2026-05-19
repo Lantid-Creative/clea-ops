@@ -62,11 +62,11 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="flex min-h-screen items-center justify-center brand-radial p-4">
+      <div className="w-full max-w-md rounded-3xl bg-card p-8 shadow-2xl space-y-6">
         <div className="text-center space-y-2">
-          <img src={cleaLogo} alt="Clea" className="mx-auto h-14 w-auto object-contain" />
-          <h1 className="text-2xl font-bold">Clea Ops</h1>
+          <img src={cleaLogo} alt="Clea" className="mx-auto h-12 w-auto object-contain" />
+          <h1 className="text-2xl font-bold tracking-tight">Clea Ops</h1>
           <p className="text-sm text-muted-foreground">
             {mode === 'forgot' ? 'Reset your password' : 'Internal Operations Portal'}
           </p>
