@@ -78,6 +78,9 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="flex justify-end">
+        <HowToGuide module="sales" />
+      </div>
       {/* VP Summary */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard title="Total Pipeline" value={formatCurrency(totalPipeline)} icon={<BarChart3 className="h-5 w-5" />} trend={{ value: 18, positive: true }} />
