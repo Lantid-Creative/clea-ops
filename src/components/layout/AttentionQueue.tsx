@@ -152,7 +152,7 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
   const { department, role } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const config = queueFor(department, role);
+  const config = role === 'admin' ? adminQueue() : queueFor(department, role);
 
   useEffect(() => {
     if (!config) { setLoading(false); return; }
