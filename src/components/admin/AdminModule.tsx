@@ -63,6 +63,25 @@ export function AdminModule() {
   const [newRole, setNewRole] = useState<AppRole>('staff');
   const [newDept, setNewDept] = useState<AppDepartment | 'none'>('none');
   const [lastCreated, setLastCreated] = useState<{ email: string; password: string } | null>(null);
+  const [resetId, setResetId] = useState<string | null>(null);
+
+  const handleResetPassword = async (userId: string) => {
+    const member = members.find((m) => m.user_id === userId);
+    if (!member) return;
+    if (!confirm(`Generate a new password for ${member.full_name ?? 'this user'}?`)) return;
+    setResetId(userId);
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: { action: 'reset_password', user_id: userId },
+    });
+    setResetId(null);
+    const result = (data as any)?.result;
+    if (error || !result?.password) {
+      toast({ title: 'Reset failed', description: error?.message || result?.error || 'Unknown error', variant: 'destructive' });
+      return;
+    }
+    setLastCreated({ email: result.email, password: result.password });
+    setCreateOpen(true);
+  };
   const { toast } = useToast();
 
   const generatePassword = (len = 14) => {
