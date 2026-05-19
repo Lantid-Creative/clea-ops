@@ -51,7 +51,7 @@ const Index = () => {
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
-      {effectiveTab === 'kpis' && <KpisModule canEdit={canEdit('kpis')} />}
+      {effectiveTab === 'kpis' && <KpisModule />}
       {effectiveTab === 'hr' && <HrModule canEdit={canEdit('hr')} />}
       {effectiveTab === 'projects' && <ProjectsModule canEdit={canEdit('projects')} />}
       {effectiveTab === 'admin' && <AdminModule />}
