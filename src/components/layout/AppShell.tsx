@@ -2,6 +2,19 @@ import { useState } from 'react';
 import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
 
@@ -14,14 +27,14 @@ interface AppShellProps {
   visibleTabs?: Tab[];
 }
 
-const allTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'clients', label: 'Customers', icon: <Users className="h-5 w-5" /> },
-  { id: 'tickets', label: 'Tickets', icon: <Ticket className="h-5 w-5" /> },
-  { id: 'sales', label: 'Sales', icon: <BarChart3 className="h-5 w-5" /> },
-  { id: 'kpis', label: 'KPIs', icon: <Target className="h-5 w-5" /> },
-  { id: 'hr', label: 'HR', icon: <UserCog className="h-5 w-5" /> },
-  { id: 'projects', label: 'Projects', icon: <LayoutDashboard className="h-5 w-5" /> },
-  { id: 'admin', label: 'Admin', icon: <Shield className="h-5 w-5" /> },
+const allTabs: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'clients', label: 'Customers', icon: Users },
+  { id: 'tickets', label: 'Tickets', icon: Ticket },
+  { id: 'sales', label: 'Sales', icon: BarChart3 },
+  { id: 'kpis', label: 'KPIs', icon: Target },
+  { id: 'hr', label: 'HR', icon: UserCog },
+  { id: 'projects', label: 'Projects', icon: LayoutDashboard },
+  { id: 'admin', label: 'Admin', icon: Shield },
 ];
 
 const tabLabels: Record<Tab, string> = {
@@ -34,79 +47,94 @@ const tabLabels: Record<Tab, string> = {
   admin: 'Team Administration',
 };
 
+function AppSidebarNav({
+  tabs,
+  activeTab,
+  onTabChange,
+}: {
+  tabs: typeof allTabs;
+  activeTab: Tab;
+  onTabChange: (tab: Tab) => void;
+}) {
+  const { state } = useSidebar();
+  const collapsed = state === 'collapsed';
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b">
+        <div className="flex items-center gap-2 px-1 py-1">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground text-sm">
+            C
+          </div>
+          {!collapsed && <span className="text-sm font-bold">Clea Ops</span>}
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <SidebarMenuItem key={tab.id}>
+                    <SidebarMenuButton
+                      isActive={activeTab === tab.id}
+                      onClick={() => onTabChange(tab.id)}
+                      tooltip={tab.label}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
 export function AppShell({ activeTab, onTabChange, children, onLogout, userRole, visibleTabs }: AppShellProps) {
   const tabs = visibleTabs ? allTabs.filter((t) => visibleTabs.includes(t.id)) : allTabs;
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Top Header */}
-      <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-card px-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground text-sm">
-            C
-          </div>
-          <div>
-            <h1 className="text-sm font-bold leading-none">Clea Ops</h1>
-            <p className="text-xs text-muted-foreground hidden sm:block">{tabLabels[activeTab]}</p>
-          </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        <AppSidebarNav tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+
+        <div className="flex flex-1 flex-col">
+          <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-card px-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger />
+              <div>
+                <h1 className="text-sm font-bold leading-none">Clea Ops</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">{tabLabels[activeTab]}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {userRole && (
+                <span className="text-xs text-muted-foreground capitalize hidden sm:inline">{userRole}</span>
+              )}
+              <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
+                <LogOut className="h-4 w-4" />
+              </Button>
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground hover:opacity-90"
+                title="My profile"
+              >
+                {userRole ? userRole.charAt(0).toUpperCase() : 'U'}
+              </button>
+            </div>
+          </header>
+          <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+
+          <main className="flex-1 overflow-auto">{children}</main>
         </div>
-        <div className="flex items-center gap-2">
-          {userRole && (
-            <span className="text-xs text-muted-foreground capitalize hidden sm:inline">{userRole}</span>
-          )}
-          <Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
-            <LogOut className="h-4 w-4" />
-          </Button>
-          <button
-            onClick={() => setProfileOpen(true)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground hover:opacity-90"
-            title="My profile"
-          >
-            {userRole ? userRole.charAt(0).toUpperCase() : 'U'}
-          </button>
-        </div>
-      </header>
-      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-
-      {/* Desktop tabs */}
-      <nav className="hidden border-b bg-card px-4 md:flex">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
-      {/* Content */}
-      <main className="flex-1 overflow-auto pb-20 md:pb-4">
-        {children}
-      </main>
-
-      {/* Mobile Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-card shadow-lg md:hidden">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs transition-colors ${
-              activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
-            {tab.icon}
-            <span className="truncate">{tab.label}</span>
-          </button>
-        ))}
-      </nav>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
