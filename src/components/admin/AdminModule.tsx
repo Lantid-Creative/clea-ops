@@ -240,73 +240,77 @@ export function AdminModule() {
           </div>
 
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-12 gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
-              <div className="col-span-4">Member</div>
-              <div className="col-span-3">Role</div>
-              <div className="col-span-3">Department</div>
-              <div className="col-span-2 text-right">Active</div>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center p-8 text-muted-foreground">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No team members found.</div>
-            ) : (
-              filtered.map((m) => (
-                <div key={m.user_id} className={`grid grid-cols-12 items-center gap-3 border-b px-4 py-3 last:border-b-0 ${!m.is_active ? 'opacity-60' : ''}`}>
-                  <div className="col-span-4">
-                    <div className="font-medium flex items-center gap-2">
-                      {m.full_name || 'Unnamed'}
-                      {!m.is_active && <Badge variant="outline">Inactive</Badge>}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate">{m.user_id}</div>
-                  </div>
-                  <div className="col-span-3">
-                    <Select value={m.role} onValueChange={(v) => update(m.user_id, { role: v as AppRole })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {ROLES.map((r) => (
-                          <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-3">
-                    <Select
-                      value={m.department ?? 'none'}
-                      onValueChange={(v) => update(m.user_id, { department: v === 'none' ? null : (v as AppDepartment) })}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">— None —</SelectItem>
-                        {DEPARTMENTS.map((d) => (
-                          <SelectItem key={d} value={d}>{DEPT_LABEL[d] ?? d}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end gap-2">
-                    {savingId === m.user_id && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => handleResetPassword(m.user_id)}
-                      disabled={resetId === m.user_id}
-                      title="Generate a new password"
-                    >
-                      {resetId === m.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
-                    </Button>
-                    <Switch
-                      checked={m.is_active}
-                      onCheckedChange={(v) => update(m.user_id, { is_active: v })}
-                    />
-                  </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[760px]">
+                <div className="grid grid-cols-12 gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
+                  <div className="col-span-4">Member</div>
+                  <div className="col-span-3">Role</div>
+                  <div className="col-span-3">Department</div>
+                  <div className="col-span-2 text-right">Active</div>
                 </div>
-              ))
-            )}
+
+                {loading ? (
+                  <div className="flex items-center justify-center p-8 text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
+                  </div>
+                ) : filtered.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">No team members found.</div>
+                ) : (
+                  filtered.map((m) => (
+                    <div key={m.user_id} className={`grid grid-cols-12 items-center gap-3 border-b px-4 py-3 last:border-b-0 ${!m.is_active ? 'opacity-60' : ''}`}>
+                      <div className="col-span-4">
+                        <div className="font-medium flex items-center gap-2">
+                          {m.full_name || 'Unnamed'}
+                          {!m.is_active && <Badge variant="outline">Inactive</Badge>}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">{m.user_id}</div>
+                      </div>
+                      <div className="col-span-3">
+                        <Select value={m.role} onValueChange={(v) => update(m.user_id, { role: v as AppRole })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {ROLES.map((r) => (
+                              <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-3">
+                        <Select
+                          value={m.department ?? 'none'}
+                          onValueChange={(v) => update(m.user_id, { department: v === 'none' ? null : (v as AppDepartment) })}
+                        >
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">— None —</SelectItem>
+                            {DEPARTMENTS.map((d) => (
+                              <SelectItem key={d} value={d}>{DEPT_LABEL[d] ?? d}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-end gap-2">
+                        {savingId === m.user_id && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => handleResetPassword(m.user_id)}
+                          disabled={resetId === m.user_id}
+                          title="Generate a new password"
+                        >
+                          {resetId === m.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Switch
+                          checked={m.is_active}
+                          onCheckedChange={(v) => update(m.user_id, { is_active: v })}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </Card>
 
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>Refresh</Button>
