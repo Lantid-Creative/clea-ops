@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatCard } from '@/components/layout/StatCard';
+import { HowToGuide } from '@/components/layout/HowToGuide';
 import { Employee, Department, EmploymentType, DEPARTMENTS, DEPT_COLORS } from '@/lib/types';
 import { formatNumber } from '@/lib/helpers';
 import { mockEmployees } from '@/lib/mock-data';
