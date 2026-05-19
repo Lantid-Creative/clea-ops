@@ -182,6 +182,38 @@ export function SalesModule({ canEdit = true }: { canEdit?: boolean }) {
           <AddDealForm onSubmit={handleAdd} onCancel={() => setShowAddForm(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Won/Lost Reason Prompt */}
+      <Dialog open={!!reasonPrompt} onOpenChange={(o) => !o && setReasonPrompt(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark deal as {reasonPrompt?.newStage}</DialogTitle>
+          </DialogHeader>
+          {reasonPrompt && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {reasonPrompt.deal.company} · {formatCurrency(reasonPrompt.deal.deal_value)}
+              </p>
+              <div>
+                <Label className="text-sm">
+                  {reasonPrompt.newStage === 'Won' ? 'Why did we win? (optional)' : 'Why did we lose? (price, competitor, timing, fit…)'}
+                </Label>
+                <Textarea
+                  value={reasonText}
+                  onChange={(e) => setReasonText(e.target.value)}
+                  className="mt-1"
+                  rows={3}
+                  placeholder={reasonPrompt.newStage === 'Won' ? 'Strong product fit…' : 'Lost to competitor X on price'}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setReasonPrompt(null)}>Cancel</Button>
+                <Button className="flex-1" onClick={confirmReason}>Confirm</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
