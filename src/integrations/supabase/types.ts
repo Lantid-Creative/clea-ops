@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      client_stage_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          client_id: string
+          from_stage: Database["public"]["Enums"]["client_stage"] | null
+          id: string
+          to_stage: Database["public"]["Enums"]["client_stage"]
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          client_id: string
+          from_stage?: Database["public"]["Enums"]["client_stage"] | null
+          id?: string
+          to_stage: Database["public"]["Enums"]["client_stage"]
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          client_id?: string
+          from_stage?: Database["public"]["Enums"]["client_stage"] | null
+          id?: string
+          to_stage?: Database["public"]["Enums"]["client_stage"]
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           archived: boolean
@@ -354,6 +381,13 @@ export type Database = {
         Returns: boolean
       }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
+      kpi_compliance: { Args: { p_from: string; p_to: string }; Returns: Json }
+      kpi_cs: { Args: { p_from: string; p_to: string }; Returns: Json }
+      kpi_finance: { Args: { p_from: string; p_to: string }; Returns: Json }
+      kpi_onboarding: { Args: { p_from: string; p_to: string }; Returns: Json }
+      kpi_product: { Args: { p_from: string; p_to: string }; Returns: Json }
+      kpi_sales: { Args: { p_from: string; p_to: string }; Returns: Json }
+      kpi_support: { Args: { p_from: string; p_to: string }; Returns: Json }
     }
     Enums: {
       app_department:
