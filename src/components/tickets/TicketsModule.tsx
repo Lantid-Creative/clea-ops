@@ -368,6 +368,9 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="space-y-4 p-4 md:p-6">
+      <div className="flex justify-end">
+        <HowToGuide module="tickets" />
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard title="Total tickets" value={String(stats.total)} icon={<TicketIcon className="h-4 w-4" />} />
         <StatCard title="Open / in progress" value={String(stats.open)} icon={<Clock className="h-4 w-4" />} />
