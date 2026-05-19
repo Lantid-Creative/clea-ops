@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CheckCircle2 } from 'lucide-react';
+import cleaLogo from '@/assets/clea-logo.png';
 
 const CATEGORIES = ['general', 'kyc', 'payments', 'onboarding', 'technical', 'billing', 'other'];
 
@@ -75,7 +76,7 @@ export default function SubmitTicket() {
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto max-w-xl">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">C</div>
+          <img src={cleaLogo} alt="Clea" className="h-10 w-auto object-contain" />
           <div>
             <h1 className="text-xl font-semibold">Submit a request</h1>
             <p className="text-sm text-muted-foreground">We'll respond within one business day.</p>

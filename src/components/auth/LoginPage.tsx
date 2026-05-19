@@ -6,6 +6,7 @@ import { Lock, Mail, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import cleaLogo from '@/assets/clea-logo.png';
 
 type Mode = 'login' | 'signup' | 'forgot';
 
@@ -64,9 +65,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground text-xl">
-            C
-          </div>
+          <img src={cleaLogo} alt="Clea" className="mx-auto h-14 w-auto object-contain" />
           <h1 className="text-2xl font-bold">Clea Ops</h1>
           <p className="text-sm text-muted-foreground">
             {mode === 'forgot' ? 'Reset your password' : 'Internal Operations Portal'}
