@@ -197,12 +197,14 @@ export function AdminModule() {
     members.find((m) => m.user_id === id)?.full_name ?? id?.slice(0, 8) ?? '—';
 
   const formatAction = (a: AuditEntry) => {
-    const d = a.details ?? {};
+    const d = (a.details ?? {}) as Record<string, unknown>;
+    const label = (v: unknown) => (typeof v === 'string' ? (DEPT_LABEL[v] ?? v) : v ?? 'none');
     switch (a.action) {
       case 'role_changed': return `Role: ${d.from} → ${d.to}`;
-      case 'department_changed': return `Dept: ${d.from ?? 'none'} → ${d.to ?? 'none'}`;
+      case 'department_changed': return `Dept: ${label(d.from)} → ${label(d.to)}`;
       case 'user_activated': return 'Activated';
       case 'user_deactivated': return 'Deactivated';
+      case 'password_reset': return 'Password reset';
       default: return a.action;
     }
   };
