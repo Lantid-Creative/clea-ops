@@ -24,11 +24,15 @@ export interface Client {
   follow_up_required?: boolean;
   assigned_agent?: string;
   notes?: string;
+  stage_entered_at?: string;
+  won_lost_reason?: string;
+  closed_at?: string | null;
 }
 
 export type DealStage = 'Prospect' | 'Contacted' | 'Proposal' | 'Negotiation' | 'Won' | 'Lost';
 
 export interface Deal {
+  won_lost_reason?: string;
   id: string;
   company: string;
   contact: string;
