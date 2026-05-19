@@ -9,6 +9,7 @@ import { ProjectsModule } from '@/components/projects/ProjectsModule';
 import { AdminModule } from '@/components/admin/AdminModule';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { FirstLoginPasswordModal } from '@/components/auth/FirstLoginPasswordModal';
+import { AttentionQueue } from '@/components/layout/AttentionQueue';
 import { useAuth } from '@/hooks/useAuth';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
@@ -48,6 +49,7 @@ const Index = () => {
       visibleTabs={visibleTabs}
     >
       <FirstLoginPasswordModal />
+      <AttentionQueue onNavigate={(t) => setActiveTab(t as Tab)} />
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
