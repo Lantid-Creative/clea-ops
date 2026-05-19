@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
+import cleaLogo from '@/assets/clea-logo.png';
 import {
   Sidebar,
   SidebarContent,
@@ -63,10 +64,8 @@ function AppSidebarNav({
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2 px-1 py-1">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground text-sm">
-            C
-          </div>
-          {!collapsed && <span className="text-sm font-bold">Clea Ops</span>}
+          <img src={cleaLogo} alt="Clea" className="h-8 w-auto shrink-0 object-contain" />
+          {!collapsed && <span className="text-sm font-bold">Ops</span>}
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -109,8 +108,9 @@ export function AppShell({ activeTab, onTabChange, children, onLogout, userRole,
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-card px-4 shadow-sm">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
+              <img src={cleaLogo} alt="Clea" className="h-7 w-auto object-contain" />
               <div>
-                <h1 className="text-sm font-bold leading-none">Clea Ops</h1>
+                <h1 className="text-sm font-bold leading-none">Ops</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">{tabLabels[activeTab]}</p>
               </div>
             </div>
