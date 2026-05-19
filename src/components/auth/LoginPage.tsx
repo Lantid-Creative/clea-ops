@@ -124,11 +124,6 @@ export function LoginPage() {
         </form>
 
         <div className="text-center">
-          {mode === 'login' && (
-            <button onClick={() => setMode('signup')} className="text-sm text-primary hover:underline">
-              New team member? Create your account
-            </button>
-          )}
           {mode === 'signup' && (
             <button onClick={() => setMode('login')} className="text-sm text-primary hover:underline flex items-center justify-center gap-1 mx-auto">
               <ArrowLeft className="h-3 w-3" /> Back to sign in
