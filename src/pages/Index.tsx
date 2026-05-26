@@ -55,7 +55,7 @@ const Index = () => {
       visibleTabs={visibleTabs}
     >
       <FirstLoginPasswordModal />
-      <AttentionQueue onNavigate={(t, f) => navigateTo(t as Tab, f)} />
+      <AttentionQueue />
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} initialFilter={pendingFilter} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} initialFilter={pendingFilter} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
