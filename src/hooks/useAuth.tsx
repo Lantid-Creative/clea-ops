@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppRole = 'admin' | 'manager' | 'staff';
+export type AppRole = 'admin' | 'super_admin' | 'manager' | 'staff';
 export type AppDepartment =
   | 'support'
   | 'onboarding'
@@ -11,6 +11,7 @@ export type AppDepartment =
   | 'finance'
   | 'hr'
   | 'product_dev'
+  | 'payments_ops'
   // legacy values kept for backward compatibility with existing rows
   | 'marketing'
   | 'customer_success'
@@ -29,31 +30,31 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   canEdit: (tab: string) => boolean;
   canView: (tab: string) => boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Maps each department to the tabs its staff can see.
-// Managers see everything (read-only outside their dept); admins see all.
+// Maps each department to the tabs its staff can see. 'mywork' is everyone.
 const DEPARTMENT_TAB_MAP: Record<AppDepartment, string[]> = {
-  support: ['tickets', 'clients', 'kpis'],
-  onboarding: ['clients', 'kpis'],
-  sales: ['sales', 'clients', 'kpis'],
-  compliance: ['clients', 'kpis'], // KYC read-only per plan
-  finance: ['kpis', 'hr'],
-  hr: ['hr', 'kpis'],
-  product_dev: ['projects', 'tickets', 'kpis'],
-  // legacy mappings
-  marketing: ['kpis'],
-  customer_success: ['clients', 'tickets', 'kpis'],
-  engineering: ['projects', 'kpis', 'tickets'],
-  design: ['projects', 'kpis'],
-  operations: ['clients', 'hr', 'kpis', 'tickets'],
+  support: ['mywork', 'tickets', 'clients', 'kpis'],
+  onboarding: ['mywork', 'clients', 'kpis'],
+  sales: ['mywork', 'sales', 'clients', 'kpis'],
+  compliance: ['mywork', 'clients', 'kpis'],
+  finance: ['mywork', 'kpis', 'payments', 'hr'],
+  hr: ['mywork', 'hr', 'kpis'],
+  product_dev: ['mywork', 'projects', 'tickets', 'kpis'],
+  payments_ops: ['mywork', 'payments', 'clients', 'kpis'],
+  marketing: ['mywork', 'kpis'],
+  customer_success: ['mywork', 'clients', 'tickets', 'kpis'],
+  engineering: ['mywork', 'projects', 'kpis', 'tickets'],
+  design: ['mywork', 'projects', 'kpis'],
+  operations: ['mywork', 'clients', 'hr', 'kpis', 'tickets', 'payments'],
 };
 
-// Departments whose access to a given tab is read-only even for managers
 const READ_ONLY_OVERRIDES: Partial<Record<AppDepartment, string[]>> = {
-  compliance: ['clients'], // Compliance staff/managers can view KYC but not edit
+  compliance: ['clients'],
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -104,30 +105,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const isAdmin = role === 'admin' || role === 'super_admin';
+  const isSuperAdmin = role === 'super_admin';
+
   const canView = (tab: string): boolean => {
     if (!role) return false;
-    if (tab === 'admin') return role === 'admin';
-    if (role === 'admin') return true;
+    if (tab === 'mywork') return true;
+    if (tab === 'admin' || tab === 'audit') return isAdmin;
+    if (isAdmin) return true;
     if (role === 'manager') return true; // managers see all tabs (read-only on other depts)
-    // Staff: only their department's tabs
     if (!department) return false;
     return DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
   };
 
   const canEdit = (tab: string): boolean => {
     if (!role) return false;
-    if (tab === 'admin') return role === 'admin';
-    if (role === 'admin') return true;
-    // Managers and staff can edit tabs mapped to their own department,
-    // except where a read-only override applies (e.g. Compliance → Clients).
+    if (tab === 'mywork') return true;
+    if (tab === 'admin' || tab === 'audit') return isAdmin;
+    if (isAdmin) return true;
     if (!department) return false;
     const allowed = DEPARTMENT_TAB_MAP[department]?.includes(tab) ?? false;
     const readOnly = READ_ONLY_OVERRIDES[department]?.includes(tab) ?? false;
-    if (role === 'manager') {
-      // Managers also see other departments' tabs (read-only).
-      return allowed && !readOnly;
-    }
-    // Staff: only edit their own department's tabs (and not read-only overrides).
     return allowed && !readOnly;
   };
 
@@ -156,7 +154,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, role, department, loading, signUp, signIn, signOut, canEdit, canView }}>
+    <AuthContext.Provider
+      value={{ session, user, role, department, loading, signUp, signIn, signOut, canEdit, canView, isAdmin, isSuperAdmin }}
+    >
       {children}
     </AuthContext.Provider>
   );
