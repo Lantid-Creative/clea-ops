@@ -66,6 +66,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Verified — ready to onboard',
         description: 'Customers passed compliance and are waiting for onboarding.',
         targetTab: 'clients',
+        filter: { stage: 'Verified' },
         fetch: async () => {
           const { data } = await supabase
             .from('clients')
