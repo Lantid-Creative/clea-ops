@@ -49,15 +49,15 @@ const Index = () => {
   return (
     <AppShell
       activeTab={effectiveTab}
-      onTabChange={setActiveTab}
+      onTabChange={(t) => navigateTo(t, undefined)}
       onLogout={signOut}
       userRole={role}
       visibleTabs={visibleTabs}
     >
       <FirstLoginPasswordModal />
-      <AttentionQueue onNavigate={(t) => setActiveTab(t as Tab)} />
-      {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
-      {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
+      <AttentionQueue onNavigate={(t, f) => navigateTo(t as Tab, f)} />
+      {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} initialFilter={pendingFilter} />}
+      {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} initialFilter={pendingFilter} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
       {effectiveTab === 'kpis' && <KpisModule />}
       {effectiveTab === 'hr' && <HrModule canEdit={canEdit('hr')} />}
