@@ -90,7 +90,7 @@ export function PaymentsModule({ canEdit }: { canEdit: boolean }) {
       const { error } = await supabase.from('payment_exceptions').update(patch).eq('id', id);
       if (error) { toast({ title: 'Save failed', description: error.message, variant: 'destructive' }); setSaving(false); return; }
     } else {
-      const { error } = await supabase.from('payment_exceptions').insert({ ...editing, created_by: user!.id });
+      const { error } = await supabase.from('payment_exceptions').insert({ ...(editing as any), created_by: user!.id });
       if (error) { toast({ title: 'Create failed', description: error.message, variant: 'destructive' }); setSaving(false); return; }
     }
     setSaving(false);
