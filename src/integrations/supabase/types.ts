@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          from_value: string | null
+          id: string
+          item_id: string
+          item_type: string
+          to_value: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          from_value?: string | null
+          id?: string
+          item_id: string
+          item_type: string
+          to_value?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          from_value?: string | null
+          id?: string
+          item_id?: string
+          item_type?: string
+          to_value?: string | null
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -108,6 +144,8 @@ export type Database = {
           archived: boolean
           assigned_agent: string
           assigned_specialist: string
+          assigned_team: Database["public"]["Enums"]["app_department"] | null
+          assignee_id: string | null
           closed_at: string | null
           company_name: string
           contact_person: string
@@ -139,6 +177,8 @@ export type Database = {
           archived?: boolean
           assigned_agent?: string
           assigned_specialist?: string
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
+          assignee_id?: string | null
           closed_at?: string | null
           company_name: string
           contact_person?: string
@@ -170,6 +210,8 @@ export type Database = {
           archived?: boolean
           assigned_agent?: string
           assigned_specialist?: string
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
+          assignee_id?: string | null
           closed_at?: string | null
           company_name?: string
           contact_person?: string
@@ -363,6 +405,7 @@ export type Database = {
       project_tasks: {
         Row: {
           archived: boolean
+          assigned_team: Database["public"]["Enums"]["app_department"] | null
           assignee: string
           assignee_id: string | null
           column_name: string
@@ -378,6 +421,7 @@ export type Database = {
         }
         Insert: {
           archived?: boolean
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
           assignee?: string
           assignee_id?: string | null
           column_name?: string
@@ -393,6 +437,7 @@ export type Database = {
         }
         Update: {
           archived?: boolean
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
           assignee?: string
           assignee_id?: string | null
           column_name?: string
@@ -588,6 +633,45 @@ export type Database = {
         }
         Relationships: []
       }
+      work_assignments: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          from_assignee: string | null
+          from_team: Database["public"]["Enums"]["app_department"] | null
+          id: string
+          item_id: string
+          item_type: string
+          note: string
+          to_assignee: string | null
+          to_team: Database["public"]["Enums"]["app_department"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          from_assignee?: string | null
+          from_team?: Database["public"]["Enums"]["app_department"] | null
+          id?: string
+          item_id: string
+          item_type: string
+          note?: string
+          to_assignee?: string | null
+          to_team?: Database["public"]["Enums"]["app_department"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          from_assignee?: string | null
+          from_team?: Database["public"]["Enums"]["app_department"] | null
+          id?: string
+          item_id?: string
+          item_type?: string
+          note?: string
+          to_assignee?: string | null
+          to_team?: Database["public"]["Enums"]["app_department"] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -608,6 +692,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_or_super: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
       kpi_compliance: { Args: { p_from: string; p_to: string }; Returns: Json }
       kpi_cs: { Args: { p_from: string; p_to: string }; Returns: Json }
