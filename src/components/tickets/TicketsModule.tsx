@@ -226,11 +226,30 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
     setNewComment('');
   };
 
+  const ALLOWED_MIME_TYPES = new Set([
+    'image/jpeg','image/png','image/gif','image/webp','image/heic',
+    'application/pdf',
+    'text/plain','text/csv',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/zip',
+  ]);
+
   const uploadFiles = async (files: FileList | null) => {
     if (!selected || !files || !files.length) return;
     for (const f of Array.from(files)) {
+      if (!ALLOWED_MIME_TYPES.has(f.type)) {
+        toast.error(`File type not allowed: ${f.name}`);
+        continue;
+      }
       const path = `${selected.id}/${Date.now()}-${f.name}`;
-      const up = await supabase.storage.from('ticket-attachments').upload(path, f);
+      const up = await supabase.storage.from('ticket-attachments').upload(path, f, {
+        contentType: f.type,
+      });
       if (up.error) { toast.error(up.error.message); continue; }
       const { data, error } = await supabase
         .from('ticket_attachments')
@@ -253,7 +272,7 @@ export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
   const downloadAttachment = async (a: Attachment) => {
     const { data, error } = await supabase.storage
       .from('ticket-attachments')
-      .createSignedUrl(a.storage_path, 60);
+      .createSignedUrl(a.storage_path, 60, { download: a.file_name });
     if (error || !data) { toast.error('Could not generate link'); return; }
     window.open(data.signedUrl, '_blank');
   };
