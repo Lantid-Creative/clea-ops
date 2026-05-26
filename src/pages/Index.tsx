@@ -19,6 +19,12 @@ const ALL_TABS: Tab[] = ['clients', 'tickets', 'sales', 'kpis', 'hr', 'projects'
 const Index = () => {
   const { user, role, department, loading, signOut, canView, canEdit } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('clients');
+  const [pendingFilter, setPendingFilter] = useState<NavFilter | undefined>(undefined);
+
+  const navigateTo = (tab: Tab, filter?: NavFilter) => {
+    setActiveTab(tab);
+    setPendingFilter(filter);
+  };
 
   const visibleTabs = useMemo(() => {
     if (!role) return [];
