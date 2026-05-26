@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket } from 'lucide-react';
+import { Users, BarChart3, Target, UserCog, LayoutDashboard, LogOut, Shield, Ticket, Inbox, Wallet, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
 import cleaLogo from '@/assets/clea-logo.png';
@@ -17,7 +17,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
+type Tab = 'mywork' | 'clients' | 'tickets' | 'sales' | 'payments' | 'kpis' | 'hr' | 'projects' | 'admin' | 'audit';
 
 interface AppShellProps {
   activeTab: Tab;
@@ -29,23 +29,29 @@ interface AppShellProps {
 }
 
 const allTabs: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'mywork', label: 'My Work', icon: Inbox },
   { id: 'clients', label: 'Customers', icon: Users },
   { id: 'tickets', label: 'Tickets', icon: Ticket },
   { id: 'sales', label: 'Sales', icon: BarChart3 },
+  { id: 'payments', label: 'Payments Ops', icon: Wallet },
   { id: 'kpis', label: 'KPIs', icon: Target },
   { id: 'hr', label: 'HR', icon: UserCog },
   { id: 'projects', label: 'Projects', icon: LayoutDashboard },
   { id: 'admin', label: 'Admin', icon: Shield },
+  { id: 'audit', label: 'Audit Log', icon: ScrollText },
 ];
 
 const tabLabels: Record<Tab, string> = {
+  mywork: 'My Work — assigned to me & my team',
   clients: 'Customer Onboarding & Compliance',
   tickets: 'Tickets & Support',
   sales: 'Sales Pipeline & Commission',
+  payments: 'Payments Operations & Exceptions',
   kpis: 'KPI Dashboard',
   hr: 'HR Directory',
   projects: 'Project Management',
   admin: 'Team Administration',
+  audit: 'Activity & Audit Log',
 };
 
 function AppSidebarNav({

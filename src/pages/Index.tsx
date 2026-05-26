@@ -7,18 +7,21 @@ import { KpisModule } from '@/components/kpis/KpisModule';
 import { HrModule } from '@/components/hr/HrModule';
 import { ProjectsModule } from '@/components/projects/ProjectsModule';
 import { AdminModule } from '@/components/admin/AdminModule';
+import { MyWorkModule } from '@/components/mywork/MyWorkModule';
+import { PaymentsModule } from '@/components/payments/PaymentsModule';
+import { AuditLogModule } from '@/components/audit/AuditLogModule';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { FirstLoginPasswordModal } from '@/components/auth/FirstLoginPasswordModal';
 import { AttentionQueue, type NavFilter } from '@/components/layout/AttentionQueue';
 import { useAuth } from '@/hooks/useAuth';
 
-type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
+type Tab = 'mywork' | 'clients' | 'tickets' | 'sales' | 'payments' | 'kpis' | 'hr' | 'projects' | 'admin' | 'audit';
 
-const ALL_TABS: Tab[] = ['clients', 'tickets', 'sales', 'kpis', 'hr', 'projects', 'admin'];
+const ALL_TABS: Tab[] = ['mywork', 'clients', 'tickets', 'sales', 'payments', 'kpis', 'hr', 'projects', 'admin', 'audit'];
 
 const Index = () => {
   const { user, role, department, loading, signOut, canView, canEdit } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('clients');
+  const [activeTab, setActiveTab] = useState<Tab>('mywork');
   const [pendingFilter, setPendingFilter] = useState<NavFilter | undefined>(undefined);
 
   const navigateTo = (tab: Tab, filter?: NavFilter) => {
@@ -29,10 +32,10 @@ const Index = () => {
   const visibleTabs = useMemo(() => {
     if (!role) return [];
     return ALL_TABS.filter((tab) => canView(tab));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, department]);
 
-  // Default to first visible tab if current isn't visible
-  const effectiveTab = visibleTabs.includes(activeTab) ? activeTab : visibleTabs[0] ?? 'clients';
+  const effectiveTab = visibleTabs.includes(activeTab) ? activeTab : visibleTabs[0] ?? 'mywork';
 
   if (loading) {
     return (
@@ -49,20 +52,23 @@ const Index = () => {
   return (
     <AppShell
       activeTab={effectiveTab}
-      onTabChange={(t) => navigateTo(t, undefined)}
+      onTabChange={(t) => navigateTo(t as Tab, undefined)}
       onLogout={signOut}
       userRole={role}
       visibleTabs={visibleTabs}
     >
       <FirstLoginPasswordModal />
-      <AttentionQueue />
+      {effectiveTab !== 'mywork' && effectiveTab !== 'audit' && <AttentionQueue />}
+      {effectiveTab === 'mywork' && <MyWorkModule onNavigate={(t) => navigateTo(t as Tab)} />}
       {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} initialFilter={pendingFilter} />}
       {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} initialFilter={pendingFilter} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
+      {effectiveTab === 'payments' && <PaymentsModule canEdit={canEdit('payments')} />}
       {effectiveTab === 'kpis' && <KpisModule />}
       {effectiveTab === 'hr' && <HrModule canEdit={canEdit('hr')} />}
       {effectiveTab === 'projects' && <ProjectsModule canEdit={canEdit('projects')} />}
       {effectiveTab === 'admin' && <AdminModule />}
+      {effectiveTab === 'audit' && <AuditLogModule />}
     </AppShell>
   );
 };
