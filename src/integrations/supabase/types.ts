@@ -631,7 +631,8 @@ export type Database = {
         | "finance"
         | "hr"
         | "product_dev"
-      app_role: "admin" | "manager" | "staff"
+        | "payments_ops"
+      app_role: "admin" | "manager" | "staff" | "super_admin"
       client_stage:
         | "Lead"
         | "KYC Submitted"
@@ -787,8 +788,9 @@ export const Constants = {
         "finance",
         "hr",
         "product_dev",
+        "payments_ops",
       ],
-      app_role: ["admin", "manager", "staff"],
+      app_role: ["admin", "manager", "staff", "super_admin"],
       client_stage: [
         "Lead",
         "KYC Submitted",
