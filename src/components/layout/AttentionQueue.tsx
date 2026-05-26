@@ -110,6 +110,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Churn risk — no contact 30d+',
         description: 'Active customers with no recent engagement.',
         targetTab: 'clients',
+        filter: { stage: 'Active' },
         fetch: async () => {
           const cutoff = new Date(Date.now() - 30 * 86400_000).toISOString();
           const { data } = await supabase
