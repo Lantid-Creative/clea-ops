@@ -101,15 +101,21 @@ const emptyForm = {
   tags: '',
 };
 
-export function TicketsModule({ canEdit = true }: { canEdit?: boolean }) {
+export function TicketsModule({ canEdit = true, initialFilter }: { canEdit?: boolean; initialFilter?: { status?: string } }) {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [clients, setClients] = useState<ClientLite[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>(
+    (initialFilter?.status as TicketStatus) ?? 'all'
+  );
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | 'all'>('all');
+
+  useEffect(() => {
+    if (initialFilter?.status) setStatusFilter(initialFilter.status as TicketStatus);
+  }, [initialFilter?.status]);
   const [showArchived, setShowArchived] = useState(false);
   const [selected, setSelected] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
