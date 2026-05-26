@@ -47,8 +47,8 @@ export function MyWorkModule({ onNavigate }: { onNavigate?: (tab: string) => voi
     const dept = department;
 
     const [ticketsMine, ticketsTeam, clientsMine, clientsTeam, tasksMine, tasksTeam, peMine, peTeam] = await Promise.all([
-      supabase.from('tickets').select('id,title,status,priority,assignee_id,category,updated_at').eq('assignee_id', user!.id).eq('archived', false).limit(50),
-      dept ? supabase.from('tickets').select('id,title,status,priority,assignee_id,category,updated_at').is('assignee_id', null).eq('archived', false).limit(50) : Promise.resolve({ data: [] as any[] }),
+      supabase.from('tickets').select('id,title,status,priority,assignee_id,category,assigned_team,updated_at').eq('assignee_id', user!.id).eq('archived', false).limit(50),
+      dept ? supabase.from('tickets').select('id,title,status,priority,assignee_id,category,assigned_team,updated_at').eq('assigned_team', dept).is('assignee_id', null).eq('archived', false).limit(50) : Promise.resolve({ data: [] as any[] }),
       supabase.from('clients').select('id,company_name,stage,assignee_id,assigned_team,updated_at').eq('assignee_id', user!.id).eq('archived', false).limit(50),
       dept ? supabase.from('clients').select('id,company_name,stage,assignee_id,assigned_team,updated_at').eq('assigned_team', dept).is('assignee_id', null).eq('archived', false).limit(50) : Promise.resolve({ data: [] as any[] }),
       supabase.from('project_tasks').select('id,title,column_name,priority,assignee_id,assigned_team,updated_at').eq('assignee_id', user!.id).eq('archived', false).limit(50),
