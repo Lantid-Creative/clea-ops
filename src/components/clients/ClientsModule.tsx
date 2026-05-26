@@ -626,6 +626,25 @@ export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boo
                   </div>
                 )}
 
+                {canEdit && (
+                  <div>
+                    <Label className="text-sm mb-1 block">Route to team</Label>
+                    <Select
+                      value={(selectedClient as any).assigned_team || '__none__'}
+                      onValueChange={(v) => updateTeam(selectedClient, v === '__none__' ? null : v)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Auto-routed by stage" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Auto-route by stage</SelectItem>
+                        {TEAM_OPTIONS.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">Changing the team clears the personal assignee so the new team's queue picks it up.</p>
+                  </div>
+                )}
+
                 <div>
                   <div className="mb-2 flex items-center justify-between">
                     <h4 className="font-semibold text-sm">KYC Document Checklist</h4>
