@@ -27,7 +27,9 @@ export interface Client {
   stage_entered_at?: string;
   won_lost_reason?: string;
   closed_at?: string | null;
+  assigned_team?: string | null;
 }
+
 
 export type DealStage = 'Prospect' | 'Contacted' | 'Proposal' | 'Negotiation' | 'Won' | 'Lost';
 

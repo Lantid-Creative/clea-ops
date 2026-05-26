@@ -41,6 +41,7 @@ interface Ticket {
   first_response_at: string | null;
   resolved_at: string | null;
   archived: boolean;
+  assigned_team: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -202,7 +203,7 @@ export function TicketsModule({ canEdit = true, initialFilter }: { canEdit?: boo
   };
 
   const updateField = async (id: string, patch: Partial<Ticket>) => {
-    const { error } = await supabase.from('tickets').update(patch).eq('id', id);
+    const { error } = await supabase.from('tickets').update(patch as any).eq('id', id);
     if (error) { toast.error(error.message); return; }
     setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
     if (selected?.id === id) setSelected({ ...selected, ...patch } as Ticket);
@@ -592,6 +593,28 @@ export function TicketsModule({ canEdit = true, initialFilter }: { canEdit?: boo
                       <SelectContent>
                         <SelectItem value="none">— unassigned —</SelectItem>
                         {profiles.map((p) => <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || 'Unnamed'}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Team</Label>
+                    <Select
+                      value={selected.assigned_team || 'auto'}
+                      onValueChange={(v) => canEdit && updateField(selected.id, { assigned_team: v === 'auto' ? null : v, assignee_id: null } as any)}
+                      disabled={!canEdit}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto-route by category</SelectItem>
+                        <SelectItem value="support">Support</SelectItem>
+                        <SelectItem value="product_dev">Product / Dev</SelectItem>
+                        <SelectItem value="payments_ops">Payments Ops</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="compliance">Compliance</SelectItem>
+                        <SelectItem value="onboarding">Onboarding</SelectItem>
+                        <SelectItem value="customer_success">Customer Success</SelectItem>
+                        <SelectItem value="sales">Sales</SelectItem>
+                        <SelectItem value="operations">Operations</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

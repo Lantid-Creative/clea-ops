@@ -130,6 +130,18 @@ type CommentRow = {
   body: string;
   created_at: string;
 };
+const TEAM_OPTIONS: { value: string; label: string }[] = [
+  { value: 'sales', label: 'Sales' },
+  { value: 'compliance', label: 'Compliance' },
+  { value: 'onboarding', label: 'Onboarding' },
+  { value: 'customer_success', label: 'Customer Success' },
+  { value: 'support', label: 'Support' },
+  { value: 'payments_ops', label: 'Payments Ops' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'product_dev', label: 'Product / Dev' },
+  { value: 'operations', label: 'Operations' },
+];
+
 
 export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boolean; initialFilter?: { stage?: string } }) {
   const [clients, setClients] = useState<Client[]>([]);
@@ -433,6 +445,16 @@ export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boo
     toast.success(specialistName ? `Assigned to ${specialistName}` : 'Unassigned');
   };
 
+  const updateTeam = async (client: Client, team: string | null) => {
+    const { error } = await supabase.from('clients').update({ assigned_team: team as any, assignee_id: null }).eq('id', client.id);
+    if (error) return toast.error(error.message);
+    setClients((prev) => prev.map((c) => c.id === client.id ? { ...c, assigned_team: team } : c));
+    setSelectedClient((prev) => prev && prev.id === client.id ? { ...prev, assigned_team: team } : prev);
+    toast.success(team ? `Routed to ${team.replace('_', ' ')}` : 'Team cleared');
+  };
+
+
+
   const toggleDoc = async (client: Client, doc: string) => {
     const next = { ...client.kyc_documents, [doc]: !client.kyc_documents[doc] };
     const { error } = await supabase.from('clients').update({ kyc_documents: next }).eq('id', client.id);
@@ -601,6 +623,25 @@ export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boo
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                )}
+
+                {canEdit && (
+                  <div>
+                    <Label className="text-sm mb-1 block">Route to team</Label>
+                    <Select
+                      value={(selectedClient as any).assigned_team || '__none__'}
+                      onValueChange={(v) => updateTeam(selectedClient, v === '__none__' ? null : v)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Auto-routed by stage" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Auto-route by stage</SelectItem>
+                        {TEAM_OPTIONS.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">Changing the team clears the personal assignee so the new team's queue picks it up.</p>
                   </div>
                 )}
 
