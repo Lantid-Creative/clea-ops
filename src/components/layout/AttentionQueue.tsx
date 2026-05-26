@@ -151,6 +151,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Open bug / engineering tickets',
         description: 'Issues routed to the product / dev team.',
         targetTab: 'tickets',
+        filter: { status: 'open' },
         fetch: async () => {
           const { data } = await supabase
             .from('tickets')
