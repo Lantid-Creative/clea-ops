@@ -5,10 +5,12 @@ import { useAuth, AppDepartment } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 type QueueItem = { id: string; title: string; subtitle?: string; action?: { label: string; icon: any; run: () => Promise<unknown> } };
+export type NavFilter = { stage?: string; status?: string };
 type QueueConfig = {
   label: string;
   description: string;
   targetTab: string;
+  filter?: NavFilter;
   fetch: () => Promise<QueueItem[]>;
 };
 
