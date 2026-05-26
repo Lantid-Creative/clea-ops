@@ -42,6 +42,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Pending KYC reviews',
         description: 'Customers waiting for compliance to review their documents.',
         targetTab: 'clients',
+        filter: { stage: 'KYC Submitted' },
         fetch: async () => {
           const { data } = await supabase
             .from('clients')
