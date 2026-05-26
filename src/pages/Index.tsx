@@ -9,7 +9,7 @@ import { ProjectsModule } from '@/components/projects/ProjectsModule';
 import { AdminModule } from '@/components/admin/AdminModule';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { FirstLoginPasswordModal } from '@/components/auth/FirstLoginPasswordModal';
-import { AttentionQueue } from '@/components/layout/AttentionQueue';
+import { AttentionQueue, type NavFilter } from '@/components/layout/AttentionQueue';
 import { useAuth } from '@/hooks/useAuth';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
