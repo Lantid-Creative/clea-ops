@@ -142,9 +142,9 @@ export function KycChecklist({ clientId, canEdit }: { clientId: string; canEdit:
           )}
           {item.notes && <p className="text-xs italic text-muted-foreground">"{item.notes}"</p>}
           {item.file_url && (
-            <a href={item.file_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline">
+            <button type="button" onClick={() => viewFile(item)} className="text-xs text-primary underline">
               View document
-            </a>
+            </button>
           )}
           {canEdit && (
             <div className="space-y-2">
