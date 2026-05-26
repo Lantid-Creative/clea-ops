@@ -241,6 +241,75 @@ export type Database = {
         }
         Relationships: []
       }
+      employees: {
+        Row: {
+          account_number: string
+          archived: boolean
+          bank_name: string
+          created_at: string
+          created_by: string | null
+          department: string
+          education: string
+          email: string
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
+          employment_type: string
+          id: string
+          name: string
+          phone: string
+          role: string
+          start_date: string | null
+          state_of_origin: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_number?: string
+          archived?: boolean
+          bank_name?: string
+          created_at?: string
+          created_by?: string | null
+          department?: string
+          education?: string
+          email?: string
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
+          employment_type?: string
+          id?: string
+          name: string
+          phone?: string
+          role?: string
+          start_date?: string | null
+          state_of_origin?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_number?: string
+          archived?: boolean
+          bank_name?: string
+          created_at?: string
+          created_by?: string | null
+          department?: string
+          education?: string
+          email?: string
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
+          employment_type?: string
+          id?: string
+          name?: string
+          phone?: string
+          role?: string
+          start_date?: string | null
+          state_of_origin?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       hr_onboarding_tasks: {
         Row: {
           completed_at: string | null
