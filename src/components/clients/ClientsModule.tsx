@@ -445,6 +445,13 @@ export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boo
     toast.success(specialistName ? `Assigned to ${specialistName}` : 'Unassigned');
   };
 
+  const updateTeam = async (client: Client, team: string | null) => {
+    const { error } = await supabase.from('clients').update({ assigned_team: team as any, assignee_id: null }).eq('id', client.id);
+    if (error) return toast.error(error.message);
+    setClients((prev) => prev.map((c) => c.id === client.id ? { ...c, assigned_team: team } : c));
+    setSelectedClient((prev) => prev && prev.id === client.id ? { ...prev, assigned_team: team } : prev);
+    toast.success(team ? `Routed to ${team.replace('_', ' ')}` : 'Team cleared');
+
   const toggleDoc = async (client: Client, doc: string) => {
     const next = { ...client.kyc_documents, [doc]: !client.kyc_documents[doc] };
     const { error } = await supabase.from('clients').update({ kyc_documents: next }).eq('id', client.id);
