@@ -1,131 +1,139 @@
-# KPI System & Cross-Team Workflows — Plan
+# Clea Ops — Role-Based Operational Workflow
 
-Goal: KPIs stop being manual numbers in a table. They are **computed automatically from real activity** in the system (tickets, clients, deals), and shown per department on the KPIs tab and on each staff member's dashboard. Some KPIs depend on more than one team working together, so we also wire up the **hand-off flows** between Support, Sales, Compliance, Onboarding, and Finance.
+Goal: turn the platform from a "shared dashboard" into a permission-aware operations system where every team only sees what's theirs, work items are assignable and trackable end-to-end, and admins/super-admins oversee everything.
 
----
-
-## 1. KPI definitions per department
-
-All KPIs are computed for a selected period (default: current month) from existing tables.
-
-### Support
-Source: `tickets` table.
-- **Tickets opened** — count where `created_at` in period.
-- **Tickets closed** — count where `status in ('resolved','closed')` and `resolved_at` in period.
-- **Open backlog** — tickets still `open` / `in_progress` / `waiting_on_client`.
-- **Avg first-response time** — `first_response_at - created_at`.
-- **Avg resolution time** — `resolved_at - created_at`.
-- **SLA breaches** — tickets past `due_date` and not resolved.
-
-### Sales
-Source: `clients` + (new) `deals` activity.
-- **New leads added** — clients created in period with `stage='Lead'`.
-- **Leads contacted** — clients moved out of `Lead` in period.
-- **Conversion to transacting customer** — % of leads that reach `stage='Active'` (transacting). This is the headline Sales KPI.
-- **Active customers this month** — `stage='Active'` and `transaction_volume > 0`.
-- **Revenue / volume** — sum of `transaction_volume` for converted customers.
-
-### Compliance
-Source: `clients` (KYC fields).
-- **KYC submitted** — clients entering `KYC Submitted` in period.
-- **KYC reviewed** — clients moved to `Verified` or rejected in period.
-- **Avg KYC turnaround time** — time between `KYC Submitted` → `Verified`.
-- **Pending KYC queue** — clients stuck in `KYC Review`.
-
-### Onboarding
-Source: `clients`.
-- **Customers onboarded** — clients with `onboard_date` in period.
-- **Avg time from Verified → Onboarded**.
-- **Drop-offs** — clients verified > 14 days ago and not onboarded.
-
-### Customer Success
-Source: `clients` + `tickets`.
-- **Active customers engaged** — clients with `last_contact_date` in period.
-- **Follow-ups pending** — `follow_up_required = true`.
-- **Churn risk** — Active customers with no contact > 30 days.
-
-### Finance / Operations
-Source: `clients`.
-- **Total transaction volume** — sum across all Active customers.
-- **Top 10 customers by volume**.
-- **Volume growth** — vs previous period.
-
-### HR
-Manual KPIs (no transactional source yet) — keep current manual entry.
-
-### Product / Dev
-Source: `tickets` filtered to `category in ('bug','feature','engineering')` + Projects board.
-- **Bugs opened / closed** in period.
-- **Tasks moved to Done** on the project board.
+Clea is a cross-border payments product (African importers paying foreign vendors in FX). The teams below are tailored to that operation.
 
 ---
 
-## 2. Cross-team workflows (who hands off to whom)
+## 1. Teams (departments) and what they own
+
+| Team | Owns | Typical work items |
+|---|---|---|
+| **Sales / BD** | Leads, deals, acquisition | Lead → KYC handoff, deal pipeline |
+| **Compliance** | KYC/AML review, sanctions, risk | KYC reviews, risk flags, re-KYC |
+| **Onboarding** | Activating verified customers | Account setup, welcome, first transfer |
+| **Payments Ops / Treasury** | FX execution, payouts, reconciliation | Payment exceptions, FX pricing, settlement |
+| **Customer Success** | Retention, follow-ups, account health | Churn risk, follow-ups, engagement |
+| **Support** | All customer-reported issues (portal + in-app) | Tickets, escalations |
+| **Product / Dev** | Bugs, features, engineering tasks | Engineering tickets, project board |
+| **Finance** | Revenue, volumes, fees, reporting | Read-heavy: KPIs, top customers |
+| **HR** | People ops, leave, onboarding tasks | HR directory, leave requests |
+| **Admin / Super Admin** | Cross-team oversight, user mgmt | Everything |
+
+Roles per team stay: `staff` (own dept), `manager` (own dept edit + read all), `admin` (everything), plus a new `super_admin` (admin + manages other admins + full audit).
+
+---
+
+## 2. Unified "Work Item" model
+
+Work is split today across `clients`, `tickets`, `project_tasks` — each with its own assignment logic. We keep those tables (domain data) but add one consistent layer:
+
+- Every work item gets: `assigned_team` (department), `assignee_id` (user, optional), `status`, `priority`, `due_date`, `resolved_at`, `resolution_note`.
+- Normalized statuses: **Open → In Progress → Waiting → Resolved → Closed** (+ Reopened).
+- Add `assigned_team` to `clients` and `project_tasks` (tickets already route by category).
+- New `work_assignments` table logs every (re)assignment: actor, from, to, timestamp, note — full handoff history.
+
+---
+
+## 3. Workflow lifecycle (tickets, KYC reviews, payment exceptions, project tasks)
 
 ```text
-Lead (Sales)
-   │  capture lead, qualify
-   ▼
-KYC Submitted (Sales → Compliance)
-   │  Compliance reviews documents
-   ▼
-Verified (Compliance → Onboarding)
-   │  Onboarding sets the customer live
-   ▼
-Onboarded → Active (Onboarding → Customer Success / Finance)
-   │  CS monitors engagement, Finance tracks volume
-   ▼
-Support tickets can be raised at any stage (Support owns resolution,
-may re-route to Compliance, Sales, or Product/Dev via ticket category).
+                Created
+                   │
+                   ▼
+           Assigned to team ──► team's "My Queue"
+                   │
+                   ▼
+          Picked up by member ──► assignee_id set, In Progress
+                   │
+                   ├── needs another team? → Reassign (logged) ──► new team's queue
+                   ├── waiting on customer? → Waiting
+                   ▼
+              Resolved (with note) ──► resolved_at, resolver_id stamped
+                   │
+                   ▼
+                Closed
+                   │
+        (reopen anytime → Open, kept in history)
 ```
 
-Concretely this means:
-- When **Sales** moves a client to `KYC Submitted`, it appears in **Compliance's queue** automatically.
-- When **Compliance** marks `Verified`, it appears in **Onboarding's queue**.
-- A **Support ticket** tagged `kyc` is visible to Compliance; tagged `billing` to Finance; tagged `bug` to Product/Dev — they can comment/resolve in their own tab without leaving their module.
-
-No new tables needed — these are filtered views over `clients` and `tickets`.
+Every transition writes to an `activity_log` so admins can audit.
 
 ---
 
-## 3. What gets built
+## 4. What each role sees on login
 
-1. **`kpi_metrics` SQL view (or RPC functions)** — one function per department that returns the numbers above for a given date range. Computed live from `tickets` and `clients`. No more manual KPI entry for the data-driven ones.
-2. **Refactor `KpisModule.tsx`** — switch from the manual `kpi_targets` table to calling these RPCs. Show big stat cards per department, with period selector (This month / Last month / Quarter / Custom).
-3. **Per-staff dashboard widgets** — on login, staff see their department's top 3 KPIs as cards above their main tab.
-4. **Department queues** — small "Needs your attention" panel on each module:
-   - Compliance tab: clients in `KYC Submitted`
-   - Onboarding tab: clients `Verified` but not onboarded
-   - CS tab: customers with no contact > 30 days
-   - Sales tab: leads not contacted in 7 days
-5. **Ticket category routing** — when a ticket has category `kyc`, `billing`, `bug`, it shows in the relevant department's ticket view in addition to Support.
-6. **Stage history tracking** — add a tiny `client_stage_history` table (client_id, from_stage, to_stage, changed_at, changed_by) so we can compute "avg KYC turnaround" and "time from Verified → Onboarded". Filled by a trigger on `clients.stage` change.
-7. **Keep manual KPI entry** only for HR and any custom target a manager wants to track alongside the auto ones.
+- **Staff**: only their team's tabs + a personal "My Work" dashboard showing items assigned **to them** or **to their team and unassigned**.
+- **Manager**: their team's full queue + read-only view of other teams + team KPIs.
+- **Admin**: all teams, all queues, user management, audit log.
+- **Super Admin**: everything Admin + manage other admins + system settings + audit export.
+
+New **"My Work"** landing page (replaces the generic Index for staff/manager) with three sections:
+1. Assigned to me (across tickets, KYC, payment exceptions, tasks)
+2. My team's open queue (unassigned)
+3. My team's KPIs (this week)
 
 ---
 
-## 4. Technical notes
+## 5. New / changed pages
 
-- New table: `client_stage_history` (client_id, from_stage, to_stage, changed_at, changed_by uuid). Trigger `clients_stage_history_trg` on `UPDATE OF stage`.
-- New RPCs (SECURITY DEFINER, search_path=public):
-  - `kpi_support(p_from, p_to)`
-  - `kpi_sales(p_from, p_to)`
-  - `kpi_compliance(p_from, p_to)`
-  - `kpi_onboarding(p_from, p_to)`
-  - `kpi_cs(p_from, p_to)`
-  - `kpi_finance(p_from, p_to)`
-  - `kpi_product(p_from, p_to)`
-  - Each returns a JSON object with the named metrics above.
-- RLS: RPCs gated by `is_user_active(auth.uid())`; staff only see their own department's RPC results from the UI.
-- Frontend: new `src/components/kpis/` cards per department; `useKpis(department, range)` hook.
+| Page | Purpose | Who sees it |
+|---|---|---|
+| **My Work** (new home) | Personal + team queue across all item types | Everyone |
+| **Team Queues** (new) | Per-team filterable queue (Compliance, Payments Ops, Support, Dev…) | That team + managers + admin |
+| **Payment Exceptions** (new module) | Failed/stuck transfers, FX issues — assigned to Payments Ops | Payments Ops, Admin |
+| **Audit Log** (new, admin-only) | Every assignment, status change, role change, deletion | Admin / Super Admin |
+| **User Management** (extend Admin) | Assign team + role on invite, deactivate, reset password, view activity | Admin / Super Admin |
+| Existing: Customers, Tickets, Sales, Projects, KPIs, HR | Keep — gain the new assignment + status fields | Per current role map |
 
 ---
 
-## 5. Confirm before I build
+## 6. Permissions matrix
 
-1. Headline Sales KPI = **% of leads that reach `stage='Active'`** in the period. OK?
-2. Treat `stage='Active' AND transaction_volume > 0` as "transacting customer". OK?
-3. Default KPI period = **current calendar month**, with selector for Last month / Quarter / Custom. OK?
-4. Keep manual KPI entry for HR only, drop it everywhere else. OK?
+| Action | Staff (own) | Mgr (own) | Mgr (other) | Admin | Super Admin |
+|---|---|---|---|---|---|
+| View own dept items | ✅ | ✅ | 👁 read | ✅ | ✅ |
+| Edit / resolve items | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Reassign across teams | ❌ | ✅ | ❌ | ✅ | ✅ |
+| Create users / set roles | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Manage other admins | ❌ | ❌ | ❌ | ❌ | ✅ |
+| View audit log | ❌ | own team | ❌ | ✅ | ✅ |
+| Delete records | ❌ | ❌ | ❌ | ✅ | ✅ |
 
-Say "go with defaults" and I'll implement sections 1–3.
+Compliance stays read-only on customer profiles (their write surface is KYC items) — same as today, just formalized.
+
+---
+
+## 7. Technical changes (for the technically curious)
+
+- **New role**: add `super_admin` to `app_role` enum; existing `admin` keeps current power, super admin gains admin-of-admins management.
+- **Schema additions**:
+  - `clients.assigned_team app_department`, `project_tasks.assigned_team app_department`
+  - `payment_exceptions` (id, client_id, type, amount, currency, status, assigned_team, assignee_id, resolution_note, timestamps)
+  - `work_assignments` (item_type, item_id, from_assignee, to_assignee, from_team, to_team, actor_id, note, created_at)
+  - `activity_log` (item_type, item_id, actor_id, action, from_value, to_value, created_at)
+- **RLS**: per-team SELECT/UPDATE policies using existing `get_user_department()` + `has_role()`; super_admin via new `has_role(uid,'super_admin')`.
+- **Frontend**: `useMyWork()` hook aggregating items across tables; reusable `<TeamQueue type="..." />` component.
+- **Triggers**: assignment + status changes auto-write to `work_assignments` / `activity_log`.
+
+---
+
+## 8. Rollout phases
+
+1. **Foundation** — `super_admin` role, `assigned_team` columns, `work_assignments` + `activity_log`, RLS updates.
+2. **My Work + Team Queues** — new landing page, queue component, wire into tickets/KYC/projects.
+3. **Payment Exceptions module** — new table + UI for Payments Ops.
+4. **Audit Log + Super Admin** — admin-only audit viewer, super-admin management page.
+5. **Polish** — assignment notifications, due-date reminders, SLA badges.
+
+---
+
+## 9. Confirm before I build
+
+1. Team list above (Sales, Compliance, Onboarding, Payments Ops, CS, Support, Product/Dev, Finance, HR) — anything to add or remove?
+2. Add **Super Admin** as a distinct role above Admin? (Or keep just Admin.)
+3. Add the new **Payment Exceptions** module? (Core to Clea's FX/payouts ops.)
+4. Build all 5 phases at once, or start with Phase 1 + 2 only and review before continuing?
+
+Reply with answers (or "go with defaults" = yes to all, all 5 phases) and I'll start.
