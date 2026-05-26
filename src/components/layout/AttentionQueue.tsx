@@ -5,10 +5,12 @@ import { useAuth, AppDepartment } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 type QueueItem = { id: string; title: string; subtitle?: string; action?: { label: string; icon: any; run: () => Promise<unknown> } };
+export type NavFilter = { stage?: string; status?: string };
 type QueueConfig = {
   label: string;
   description: string;
   targetTab: string;
+  filter?: NavFilter;
   fetch: () => Promise<QueueItem[]>;
 };
 
@@ -40,6 +42,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Pending KYC reviews',
         description: 'Customers waiting for compliance to review their documents.',
         targetTab: 'clients',
+        filter: { stage: 'KYC Submitted' },
         fetch: async () => {
           const { data } = await supabase
             .from('clients')
@@ -63,6 +66,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Verified — ready to onboard',
         description: 'Customers passed compliance and are waiting for onboarding.',
         targetTab: 'clients',
+        filter: { stage: 'Verified' },
         fetch: async () => {
           const { data } = await supabase
             .from('clients')
@@ -83,7 +87,8 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Leads needing contact',
         description: 'New leads that have not been moved forward yet.',
-        targetTab: 'sales',
+        targetTab: 'clients',
+        filter: { stage: 'Lead' },
         fetch: async () => {
           const { data } = await supabase
             .from('clients')
@@ -105,6 +110,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Churn risk — no contact 30d+',
         description: 'Active customers with no recent engagement.',
         targetTab: 'clients',
+        filter: { stage: 'Active' },
         fetch: async () => {
           const cutoff = new Date(Date.now() - 30 * 86400_000).toISOString();
           const { data } = await supabase
@@ -127,6 +133,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Open tickets',
         description: 'Tickets still open, in progress, or awaiting client.',
         targetTab: 'tickets',
+        filter: { status: 'open' },
         fetch: async () => {
           const { data } = await supabase
             .from('tickets')
@@ -144,6 +151,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Open bug / engineering tickets',
         description: 'Issues routed to the product / dev team.',
         targetTab: 'tickets',
+        filter: { status: 'open' },
         fetch: async () => {
           const { data } = await supabase
             .from('tickets')
@@ -185,7 +193,7 @@ const adminQueue = (): QueueConfig => ({
   },
 });
 
-export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string, filter?: NavFilter) => void }) {
   const { department, role } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -218,7 +226,7 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => v
         </div>
         {onNavigate && (
           <button
-            onClick={() => onNavigate(config.targetTab)}
+            onClick={() => onNavigate(config.targetTab, config.filter)}
             className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             View all <ArrowRight className="h-3 w-3" />

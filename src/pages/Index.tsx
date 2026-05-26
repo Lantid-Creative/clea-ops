@@ -9,7 +9,7 @@ import { ProjectsModule } from '@/components/projects/ProjectsModule';
 import { AdminModule } from '@/components/admin/AdminModule';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { FirstLoginPasswordModal } from '@/components/auth/FirstLoginPasswordModal';
-import { AttentionQueue } from '@/components/layout/AttentionQueue';
+import { AttentionQueue, type NavFilter } from '@/components/layout/AttentionQueue';
 import { useAuth } from '@/hooks/useAuth';
 
 type Tab = 'clients' | 'tickets' | 'sales' | 'kpis' | 'hr' | 'projects' | 'admin';
@@ -19,6 +19,12 @@ const ALL_TABS: Tab[] = ['clients', 'tickets', 'sales', 'kpis', 'hr', 'projects'
 const Index = () => {
   const { user, role, department, loading, signOut, canView, canEdit } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('clients');
+  const [pendingFilter, setPendingFilter] = useState<NavFilter | undefined>(undefined);
+
+  const navigateTo = (tab: Tab, filter?: NavFilter) => {
+    setActiveTab(tab);
+    setPendingFilter(filter);
+  };
 
   const visibleTabs = useMemo(() => {
     if (!role) return [];
@@ -43,15 +49,15 @@ const Index = () => {
   return (
     <AppShell
       activeTab={effectiveTab}
-      onTabChange={setActiveTab}
+      onTabChange={(t) => navigateTo(t, undefined)}
       onLogout={signOut}
       userRole={role}
       visibleTabs={visibleTabs}
     >
       <FirstLoginPasswordModal />
-      <AttentionQueue onNavigate={(t) => setActiveTab(t as Tab)} />
-      {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} />}
-      {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} />}
+      <AttentionQueue onNavigate={(t, f) => navigateTo(t as Tab, f)} />
+      {effectiveTab === 'clients' && <ClientsModule canEdit={canEdit('clients')} initialFilter={pendingFilter} />}
+      {effectiveTab === 'tickets' && <TicketsModule canEdit={canEdit('tickets')} initialFilter={pendingFilter} />}
       {effectiveTab === 'sales' && <SalesModule canEdit={canEdit('sales')} />}
       {effectiveTab === 'kpis' && <KpisModule />}
       {effectiveTab === 'hr' && <HrModule canEdit={canEdit('hr')} />}

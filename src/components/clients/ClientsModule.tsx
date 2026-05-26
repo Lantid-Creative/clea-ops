@@ -131,12 +131,14 @@ type CommentRow = {
   created_at: string;
 };
 
-export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
+export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boolean; initialFilter?: { stage?: string } }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [archivedSet, setArchivedSet] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState<ClientStage | 'All'>('All');
+  const [stageFilter, setStageFilter] = useState<ClientStage | 'All'>(
+    (initialFilter?.stage as ClientStage) ?? 'All'
+  );
   const [showArchived, setShowArchived] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -151,6 +153,10 @@ export function ClientsModule({ canEdit = true }: { canEdit?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; errors: string[] } | null>(null);
+
+  useEffect(() => {
+    if (initialFilter?.stage) setStageFilter(initialFilter.stage as ClientStage);
+  }, [initialFilter?.stage]);
 
   const handleImportClick = () => fileInputRef.current?.click();
 
