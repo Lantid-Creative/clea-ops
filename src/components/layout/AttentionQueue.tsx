@@ -87,7 +87,8 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Leads needing contact',
         description: 'New leads that have not been moved forward yet.',
-        targetTab: 'sales',
+        targetTab: 'clients',
+        filter: { stage: 'Lead' },
         fetch: async () => {
           const { data } = await supabase
             .from('clients')
