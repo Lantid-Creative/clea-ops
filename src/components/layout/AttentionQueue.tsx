@@ -3,15 +3,15 @@ import { AlertCircle, ArrowRight, Check, Phone, FileCheck, UserPlus } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, AppDepartment } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type QueueItem = { id: string; title: string; subtitle?: string; action?: { label: string; icon: any; run: () => Promise<unknown> } };
 export type NavFilter = { stage?: string; status?: string };
 type QueueConfig = {
   label: string;
   description: string;
-  targetTab: string;
-  filter?: NavFilter;
-  fetch: () => Promise<QueueItem[]>;
+  fetch: (limit: number) => Promise<QueueItem[]>;
 };
 
 const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () => void): QueueConfig | null => {
@@ -41,16 +41,14 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Pending KYC reviews',
         description: 'Customers waiting for compliance to review their documents.',
-        targetTab: 'clients',
-        filter: { stage: 'KYC Submitted' },
-        fetch: async () => {
+        fetch: async (limit) => {
           const { data } = await supabase
             .from('clients')
             .select('id, company_name, stage, created_at')
             .in('stage', ['KYC Submitted', 'KYC Review'])
             .eq('archived', false)
             .order('created_at', { ascending: true })
-            .limit(5);
+            .limit(limit);
           return (data ?? []).map((c) => ({
             id: c.id,
             title: c.company_name,
@@ -65,16 +63,14 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Verified — ready to onboard',
         description: 'Customers passed compliance and are waiting for onboarding.',
-        targetTab: 'clients',
-        filter: { stage: 'Verified' },
-        fetch: async () => {
+        fetch: async (limit) => {
           const { data } = await supabase
             .from('clients')
             .select('id, company_name, country')
             .eq('stage', 'Verified')
             .eq('archived', false)
             .order('created_at', { ascending: true })
-            .limit(5);
+            .limit(limit);
           return (data ?? []).map((c) => ({
             id: c.id,
             title: c.company_name,
@@ -87,16 +83,14 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Leads needing contact',
         description: 'New leads that have not been moved forward yet.',
-        targetTab: 'clients',
-        filter: { stage: 'Lead' },
-        fetch: async () => {
+        fetch: async (limit) => {
           const { data } = await supabase
             .from('clients')
             .select('id, company_name, created_at')
             .eq('stage', 'Lead')
             .eq('archived', false)
             .order('created_at', { ascending: true })
-            .limit(5);
+            .limit(limit);
           return (data ?? []).map((c) => ({
             id: c.id,
             title: c.company_name,
@@ -109,9 +103,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Churn risk — no contact 30d+',
         description: 'Active customers with no recent engagement.',
-        targetTab: 'clients',
-        filter: { stage: 'Active' },
-        fetch: async () => {
+        fetch: async (limit) => {
           const cutoff = new Date(Date.now() - 30 * 86400_000).toISOString();
           const { data } = await supabase
             .from('clients')
@@ -119,7 +111,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
             .eq('stage', 'Active')
             .eq('archived', false)
             .or(`last_contact_date.is.null,last_contact_date.lt.${cutoff}`)
-            .limit(5);
+            .limit(limit);
           return (data ?? []).map((c) => ({
             id: c.id,
             title: c.company_name,
@@ -132,16 +124,14 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Open tickets',
         description: 'Tickets still open, in progress, or awaiting client.',
-        targetTab: 'tickets',
-        filter: { status: 'open' },
-        fetch: async () => {
+        fetch: async (limit) => {
           const { data } = await supabase
             .from('tickets')
             .select('id, title, priority, status')
             .in('status', ['open', 'in_progress', 'waiting_on_client'])
             .eq('archived', false)
             .order('created_at', { ascending: true })
-            .limit(5);
+            .limit(limit);
           return (data ?? []).map((t) => ({ id: t.id, title: t.title, subtitle: `${t.priority} · ${t.status}` }));
         },
       };
@@ -150,9 +140,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
       return {
         label: 'Open bug / engineering tickets',
         description: 'Issues routed to the product / dev team.',
-        targetTab: 'tickets',
-        filter: { status: 'open' },
-        fetch: async () => {
+        fetch: async (limit) => {
           const { data } = await supabase
             .from('tickets')
             .select('id, title, priority, category')
@@ -160,7 +148,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
             .not('status', 'in', '(resolved,closed)')
             .eq('archived', false)
             .order('created_at', { ascending: true })
-            .limit(5);
+            .limit(limit);
           return (data ?? []).map((t) => ({ id: t.id, title: t.title, subtitle: `${t.category} · ${t.priority}` }));
         },
       };
@@ -172,7 +160,6 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
 const adminQueue = (): QueueConfig => ({
   label: 'Cross-team bottlenecks',
   description: 'Where work is stuck across the pipeline right now.',
-  targetTab: 'clients',
   fetch: async () => {
     const items: QueueItem[] = [];
     const cutoff14 = new Date(Date.now() - 14 * 86400_000).toISOString();
@@ -193,68 +180,121 @@ const adminQueue = (): QueueConfig => ({
   },
 });
 
-export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string, filter?: NavFilter) => void }) {
+const PREVIEW_LIMIT = 5;
+const FULL_LIMIT = 100;
+
+function QueueRow({ item }: { item: QueueItem }) {
+  const Icon = item.action?.icon;
+  return (
+    <li className="px-4 py-2.5 flex items-center justify-between text-sm gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="font-medium truncate">{item.title}</p>
+        {item.subtitle && <p className="text-xs text-muted-foreground">{item.subtitle}</p>}
+      </div>
+      {item.action && (
+        <button
+          onClick={item.action.run}
+          className="shrink-0 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+        >
+          {Icon && <Icon className="h-3 w-3" />}
+          {item.action.label}
+        </button>
+      )}
+    </li>
+  );
+}
+
+export function AttentionQueue() {
   const { department, role } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [allItems, setAllItems] = useState<QueueItem[] | null>(null);
+  const [allLoading, setAllLoading] = useState(false);
   const refresh = () => setTick((t) => t + 1);
   const config = role === 'admin' ? adminQueue() : queueFor(department, role, refresh);
 
   useEffect(() => {
     if (!config) { setLoading(false); return; }
     let cancelled = false;
-    config.fetch().then((r) => {
+    config.fetch(PREVIEW_LIMIT).then((r) => {
       if (!cancelled) { setItems(r); setLoading(false); }
     });
     return () => { cancelled = true; };
   }, [department, role, tick]);
+
+  const openAll = async () => {
+    if (!config) return;
+    setSheetOpen(true);
+    setAllLoading(true);
+    const r = await config.fetch(FULL_LIMIT);
+    setAllItems(r);
+    setAllLoading(false);
+  };
+
+  // Refetch full list when an inline action triggers refresh while sheet is open
+  useEffect(() => {
+    if (!sheetOpen || !config) return;
+    let cancelled = false;
+    setAllLoading(true);
+    config.fetch(FULL_LIMIT).then((r) => {
+      if (!cancelled) { setAllItems(r); setAllLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [tick]);
 
   if (!config) return null;
   if (loading) return <div className="mx-4 mt-4 h-24 rounded-xl border bg-card animate-pulse" />;
   if (items.length === 0) return null;
 
   return (
-    <div className="mx-4 mt-4 rounded-xl border bg-card overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-primary" />
-          <div>
-            <p className="text-sm font-semibold">Needs your attention · {config.label}</p>
-            <p className="text-xs text-muted-foreground">{config.description}</p>
+    <>
+      <div className="mx-4 mt-4 rounded-xl border bg-card overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-primary" />
+            <div>
+              <p className="text-sm font-semibold">Needs your attention · {config.label}</p>
+              <p className="text-xs text-muted-foreground">{config.description}</p>
+            </div>
           </div>
-        </div>
-        {onNavigate && (
           <button
-            onClick={() => onNavigate(config.targetTab, config.filter)}
+            onClick={openAll}
             className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             View all <ArrowRight className="h-3 w-3" />
           </button>
-        )}
+        </div>
+        <ul className="divide-y">
+          {items.map((it) => <QueueRow key={it.id} item={it} />)}
+        </ul>
       </div>
-      <ul className="divide-y">
-        {items.map((it) => {
-          const Icon = it.action?.icon;
-          return (
-            <li key={it.id} className="px-4 py-2.5 flex items-center justify-between text-sm gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium truncate">{it.title}</p>
-                {it.subtitle && <p className="text-xs text-muted-foreground">{it.subtitle}</p>}
-              </div>
-              {it.action && (
-                <button
-                  onClick={it.action.run}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10"
-                >
-                  {Icon && <Icon className="h-3 w-3" />}
-                  {it.action.label}
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
+          <SheetHeader className="px-4 py-4 border-b">
+            <SheetTitle>{config.label}</SheetTitle>
+            <SheetDescription>{config.description}</SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            {allLoading && !allItems ? (
+              <div className="p-4 text-sm text-muted-foreground">Loading…</div>
+            ) : !allItems || allItems.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground">Nothing pending. 🎉</div>
+            ) : (
+              <ul className="divide-y">
+                {allItems.map((it) => <QueueRow key={it.id} item={it} />)}
+              </ul>
+            )}
+          </ScrollArea>
+          {allItems && allItems.length > 0 && (
+            <div className="px-4 py-2 border-t text-xs text-muted-foreground">
+              Showing {allItems.length} item{allItems.length === 1 ? '' : 's'}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
