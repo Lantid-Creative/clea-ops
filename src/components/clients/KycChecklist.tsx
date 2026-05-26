@@ -88,18 +88,32 @@ export function KycChecklist({ clientId, canEdit }: { clientId: string; canEdit:
 
   const uploadFile = async (item: Item, file: File) => {
     const path = `${clientId}/${item.id}-${file.name}`;
-    const { error: upErr } = await supabase.storage.from('ticket-attachments').upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage
+      .from('ticket-attachments')
+      .upload(path, file, { upsert: true, contentType: file.type });
     if (upErr) return toast.error(upErr.message);
-    const { data } = supabase.storage.from('ticket-attachments').createSignedUrl
-      ? await supabase.storage.from('ticket-attachments').createSignedUrl(path, 60 * 60 * 24 * 30)
-      : { data: null as any };
-    const url = (data as any)?.signedUrl || path;
+    // Store only the storage path; signed URLs are generated on demand at view time.
     const { error } = await supabase.from('kyc_checklist_items').update({
-      file_url: url, status: 'submitted',
+      file_url: path, status: 'submitted',
     }).eq('id', item.id);
     if (error) return toast.error(error.message);
     toast.success('Document uploaded');
     load();
+  };
+
+  const viewFile = async (item: Item) => {
+    if (!item.file_url) return;
+    // Back-compat: if an older row still has a full URL stored, open it directly.
+    if (/^https?:\/\//i.test(item.file_url)) {
+      window.open(item.file_url, '_blank', 'noreferrer');
+      return;
+    }
+    const fileName = item.file_url.split('/').pop() || item.doc_type;
+    const { data, error } = await supabase.storage
+      .from('ticket-attachments')
+      .createSignedUrl(item.file_url, 300, { download: fileName });
+    if (error || !data?.signedUrl) return toast.error(error?.message || 'Could not generate link');
+    window.open(data.signedUrl, '_blank', 'noreferrer');
   };
 
   if (loading) return <div className="text-xs text-muted-foreground">Loading checklist…</div>;
@@ -128,9 +142,9 @@ export function KycChecklist({ clientId, canEdit }: { clientId: string; canEdit:
           )}
           {item.notes && <p className="text-xs italic text-muted-foreground">"{item.notes}"</p>}
           {item.file_url && (
-            <a href={item.file_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline">
+            <button type="button" onClick={() => viewFile(item)} className="text-xs text-primary underline">
               View document
-            </a>
+            </button>
           )}
           {canEdit && (
             <div className="space-y-2">
