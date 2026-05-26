@@ -451,6 +451,9 @@ export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boo
     setClients((prev) => prev.map((c) => c.id === client.id ? { ...c, assigned_team: team } : c));
     setSelectedClient((prev) => prev && prev.id === client.id ? { ...prev, assigned_team: team } : prev);
     toast.success(team ? `Routed to ${team.replace('_', ' ')}` : 'Team cleared');
+  };
+
+
 
   const toggleDoc = async (client: Client, doc: string) => {
     const next = { ...client.kyc_documents, [doc]: !client.kyc_documents[doc] };
