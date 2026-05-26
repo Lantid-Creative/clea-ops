@@ -133,6 +133,7 @@ const queueFor = (dept: AppDepartment | null, _role: string | null, refresh: () 
         label: 'Open tickets',
         description: 'Tickets still open, in progress, or awaiting client.',
         targetTab: 'tickets',
+        filter: { status: 'open' },
         fetch: async () => {
           const { data } = await supabase
             .from('tickets')
