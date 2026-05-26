@@ -203,7 +203,7 @@ export function TicketsModule({ canEdit = true, initialFilter }: { canEdit?: boo
   };
 
   const updateField = async (id: string, patch: Partial<Ticket>) => {
-    const { error } = await supabase.from('tickets').update(patch).eq('id', id);
+    const { error } = await supabase.from('tickets').update(patch as any).eq('id', id);
     if (error) { toast.error(error.message); return; }
     setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
     if (selected?.id === id) setSelected({ ...selected, ...patch } as Ticket);
