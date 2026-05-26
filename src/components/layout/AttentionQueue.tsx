@@ -193,7 +193,7 @@ const adminQueue = (): QueueConfig => ({
   },
 });
 
-export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string, filter?: NavFilter) => void }) {
   const { department, role } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
