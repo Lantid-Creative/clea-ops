@@ -598,6 +598,7 @@ export type Database = {
       tickets: {
         Row: {
           archived: boolean
+          assigned_team: Database["public"]["Enums"]["app_department"] | null
           assignee_id: string | null
           category: string
           client_id: string | null
@@ -620,6 +621,7 @@ export type Database = {
         }
         Insert: {
           archived?: boolean
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
           assignee_id?: string | null
           category?: string
           client_id?: string | null
@@ -642,6 +644,7 @@ export type Database = {
         }
         Update: {
           archived?: boolean
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
           assignee_id?: string | null
           category?: string
           client_id?: string | null
@@ -766,6 +769,14 @@ export type Database = {
       kpi_product: { Args: { p_from: string; p_to: string }; Returns: Json }
       kpi_sales: { Args: { p_from: string; p_to: string }; Returns: Json }
       kpi_support: { Args: { p_from: string; p_to: string }; Returns: Json }
+      route_client_team: {
+        Args: { _stage: Database["public"]["Enums"]["client_stage"] }
+        Returns: Database["public"]["Enums"]["app_department"]
+      }
+      route_ticket_team: {
+        Args: { _category: string }
+        Returns: Database["public"]["Enums"]["app_department"]
+      }
     }
     Enums: {
       app_department:
