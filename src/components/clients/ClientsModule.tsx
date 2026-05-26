@@ -154,6 +154,10 @@ export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boo
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; errors: string[] } | null>(null);
 
+  useEffect(() => {
+    if (initialFilter?.stage) setStageFilter(initialFilter.stage as ClientStage);
+  }, [initialFilter?.stage]);
+
   const handleImportClick = () => fileInputRef.current?.click();
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
