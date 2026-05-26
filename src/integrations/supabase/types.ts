@@ -375,6 +375,69 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_exceptions: {
+        Row: {
+          amount: number
+          archived: boolean
+          assigned_team: Database["public"]["Enums"]["app_department"] | null
+          assignee_id: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string
+          exception_type: string
+          id: string
+          priority: string
+          reference: string
+          resolution_note: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          archived?: boolean
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
+          assignee_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string
+          exception_type?: string
+          id?: string
+          priority?: string
+          reference?: string
+          resolution_note?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          archived?: boolean
+          assigned_team?: Database["public"]["Enums"]["app_department"] | null
+          assignee_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string
+          exception_type?: string
+          id?: string
+          priority?: string
+          reference?: string
+          resolution_note?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -678,6 +741,7 @@ export type Database = {
     }
     Functions: {
       can_edit_clients: { Args: { _user_id: string }; Returns: boolean }
+      can_edit_payments: { Args: { _user_id: string }; Returns: boolean }
       can_edit_projects: { Args: { _user_id: string }; Returns: boolean }
       can_edit_tickets: { Args: { _user_id: string }; Returns: boolean }
       can_manage_hr: { Args: { _user_id: string }; Returns: boolean }
