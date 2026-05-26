@@ -130,6 +130,18 @@ type CommentRow = {
   body: string;
   created_at: string;
 };
+const TEAM_OPTIONS: { value: string; label: string }[] = [
+  { value: 'sales', label: 'Sales' },
+  { value: 'compliance', label: 'Compliance' },
+  { value: 'onboarding', label: 'Onboarding' },
+  { value: 'customer_success', label: 'Customer Success' },
+  { value: 'support', label: 'Support' },
+  { value: 'payments_ops', label: 'Payments Ops' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'product_dev', label: 'Product / Dev' },
+  { value: 'operations', label: 'Operations' },
+];
+
 
 export function ClientsModule({ canEdit = true, initialFilter }: { canEdit?: boolean; initialFilter?: { stage?: string } }) {
   const [clients, setClients] = useState<Client[]>([]);
