@@ -41,6 +41,7 @@ interface Ticket {
   first_response_at: string | null;
   resolved_at: string | null;
   archived: boolean;
+  assigned_team: string | null;
   created_at: string;
   updated_at: string;
 }
