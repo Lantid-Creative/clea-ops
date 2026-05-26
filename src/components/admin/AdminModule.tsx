@@ -31,15 +31,16 @@ type AuditEntry = {
   created_at: string;
 };
 
-const ROLES: AppRole[] = ['admin', 'manager', 'staff'];
+const ROLES: AppRole[] = ['super_admin', 'admin', 'manager', 'staff'];
 const DEPARTMENTS: AppDepartment[] = [
-  'support', 'onboarding', 'sales', 'compliance', 'finance', 'hr', 'product_dev',
+  'support', 'onboarding', 'sales', 'compliance', 'payments_ops', 'finance', 'hr', 'product_dev',
 ];
 const DEPT_LABEL: Record<string, string> = {
   support: 'Support',
   onboarding: 'Onboarding',
   sales: 'Sales',
   compliance: 'Compliance',
+  payments_ops: 'Payments Ops',
   finance: 'Finance',
   hr: 'HR',
   product_dev: 'Product / Dev',
