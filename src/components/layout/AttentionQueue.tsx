@@ -226,7 +226,7 @@ export function AttentionQueue({ onNavigate }: { onNavigate?: (tab: string, filt
         </div>
         {onNavigate && (
           <button
-            onClick={() => onNavigate(config.targetTab)}
+            onClick={() => onNavigate(config.targetTab, config.filter)}
             className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             View all <ArrowRight className="h-3 w-3" />
