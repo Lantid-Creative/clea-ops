@@ -596,6 +596,28 @@ export function TicketsModule({ canEdit = true, initialFilter }: { canEdit?: boo
                       </SelectContent>
                     </Select>
                   </div>
+                  <div>
+                    <Label>Team</Label>
+                    <Select
+                      value={selected.assigned_team || 'auto'}
+                      onValueChange={(v) => canEdit && updateField(selected.id, { assigned_team: v === 'auto' ? null : v, assignee_id: null } as any)}
+                      disabled={!canEdit}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto-route by category</SelectItem>
+                        <SelectItem value="support">Support</SelectItem>
+                        <SelectItem value="product_dev">Product / Dev</SelectItem>
+                        <SelectItem value="payments_ops">Payments Ops</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="compliance">Compliance</SelectItem>
+                        <SelectItem value="onboarding">Onboarding</SelectItem>
+                        <SelectItem value="customer_success">Customer Success</SelectItem>
+                        <SelectItem value="sales">Sales</SelectItem>
+                        <SelectItem value="operations">Operations</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="rounded-md border bg-muted/30 p-3 text-sm">
